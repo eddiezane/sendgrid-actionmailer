@@ -1,6 +1,6 @@
-# Sendgrid::Rails
+# SendGridRails
 
-TODO: Write a gem description
+SendGrid support for Rails via ActionMailer.
 
 ## Installation
 
@@ -15,10 +15,17 @@ And then execute:
 Or install it yourself as:
 
     $ gem install sendgrid-rails
+    
 
 ## Usage
 
-TODO: Write usage instructions here
+Edit your `config/environments/$ENVIRONMENT.rb` file and add/change the following to the ActionMailer configuration.
+
+	  config.action_mailer.delivery_method = :sendgrid_rails
+
+TODO: Add ActionMailer instructions.
+
+TODO: Passing in credentials. Currently only works through environment variables.
 
 ## Contributing
 
