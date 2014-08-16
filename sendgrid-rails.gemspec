@@ -7,10 +7,10 @@ Gem::Specification.new do |spec|
   spec.name          = 'sendgrid-rails'
   spec.version       = SendGridRails::VERSION
   spec.authors       = ['Eddie Zaneski']
-  spec.email         = ['eddiezane@gmail.com']
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
-  spec.homepage      = ''
+  spec.email         = ['community@sendgrid.com']
+  spec.summary       = %q{SendGrid support for ActionMailer.}
+  spec.description   = %q{Use ActionMailer with SendGrid's Web API.}
+  spec.homepage      = 'https://github.com/sendgrid/sendgrid-rails'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0")
