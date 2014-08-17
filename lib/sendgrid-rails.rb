@@ -7,8 +7,8 @@ module SendGridRails
   class DeliveryMethod
     def initialize(params)
       @client = SendGrid::Client.new do |c|
-        c.api_user = ENV['SENDGRID_USERNAME']
-        c.api_key = ENV['SENDGRID_PASSWORD']
+        c.api_user = Rails.application.config.sendgrid_rails_settings[:api_user]
+        c.api_key = Rails.application.config.sendgrid_rails_settings[:api_key]
       end
     end
 
