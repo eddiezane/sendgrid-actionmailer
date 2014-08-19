@@ -22,7 +22,7 @@ Or install it yourself as:
 Edit your `config/environments/$ENVIRONMENT.rb` file and add/change the following to the ActionMailer configuration.
 
 	  config.action_mailer.delivery_method = :sendgrid_rails
-	  config.sendgrid_rails_settings = {api_user: ENV['SENDGRID_USERNAME'], api_key: ENV['SENDGRID_PASSWORD']}
+	  config.action_mailer.sendgrid_rails_settings = {api_user: ENV['SENDGRID_USERNAME'], api_key: ENV['SENDGRID_PASSWORD']}
 
 TODO: Add ActionMailer instructions.
 
