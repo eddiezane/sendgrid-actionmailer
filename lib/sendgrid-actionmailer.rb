@@ -1,9 +1,9 @@
-require 'sendgrid-rails/version'
-require 'sendgrid-rails/railtie' if defined? Rails
+require 'sendgrid-actionmailer/version'
+require 'sendgrid-actionmailer/railtie' if defined? Rails
 
 require 'sendgrid-ruby'
 
-module SendGridRails
+module SendGridActionMailer
   class DeliveryMethod
     def initialize(params)
       @client = SendGrid::Client.new do |c|

@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in sendgrid-rails.gemspec
+# Specify your gem's dependencies in sendgrid-actionmailer.gemspec
 gemspec
