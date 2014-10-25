@@ -1,6 +1,8 @@
 require 'sendgrid-actionmailer/version'
 require 'sendgrid-actionmailer/railtie' if defined? Rails
 
+require 'tempfile'
+
 require 'sendgrid-ruby'
 
 module SendGridActionMailer
@@ -42,12 +44,17 @@ module SendGridActionMailer
           email.html = mail.html_part.decoded
         end
 
+        # This needs to be done better
         mail.attachments.each do |a|
+          t = Tempfile.new("sendgrid-actionmailer#{rand(1000)}")
+          t.binmode
+          t.write(a.read)
+          email.add_attachment(t, a.filename)
         end
+
       end
+      @client.send(email)
     end
 
-    # TODO:
-    # @client.send(email)
   end
 end
