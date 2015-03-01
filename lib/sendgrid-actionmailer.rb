@@ -16,7 +16,7 @@ module SendGridActionMailer
 
     def deliver!(mail)
       email = SendGrid::Mail.new do |m|
-        m.to      = mail[:to]
+        m.to      = mail[:to].addresses
         m.from    = mail[:from]
         m.subject = mail[:subject]
       end
