@@ -19,8 +19,8 @@ module SendGridActionMailer
     def deliver!(mail)
       email = SendGrid::Mail.new do |m|
         m.to      = mail[:to].addresses
-        m.from    = mail[:from]
-        m.subject = mail[:subject]
+        m.from    = mail[:from].value
+        m.subject = mail.subject
       end
 
       # TODO: This is pretty ugly
@@ -53,8 +53,8 @@ module SendGridActionMailer
           t.write(a.read)
           email.add_attachment(t, a.filename)
         end
-
       end
+
       @client.send(email)
     end
 
