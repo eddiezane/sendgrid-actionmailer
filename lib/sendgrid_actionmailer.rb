@@ -17,10 +17,13 @@ module SendGridActionMailer
     end
 
     def deliver!(mail)
+      from = mail[:from].tree.addresses.first
+
       email = SendGrid::Mail.new do |m|
-        m.to      = mail[:to].addresses
-        m.from    = mail[:from].value
-        m.subject = mail.subject
+        m.to        = mail[:to].addresses
+        m.from      = from.address
+        m.from_name = from.display_name
+        m.subject   = mail.subject
       end
 
       # TODO: This is pretty ugly
