@@ -1,5 +1,4 @@
 require 'mail'
-require 'sendgrid-actionmailer'
 
 module SendGridActionMailer
   describe DeliveryMethod do

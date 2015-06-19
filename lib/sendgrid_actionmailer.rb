@@ -1,5 +1,5 @@
-require 'sendgrid-actionmailer/version'
-require 'sendgrid-actionmailer/railtie' if defined? Rails
+require 'sendgrid_actionmailer/version'
+require 'sendgrid_actionmailer/railtie' if defined? Rails
 
 require 'tempfile'
 
