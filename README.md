@@ -2,6 +2,8 @@
 
 SendGrid support for Rails via ActionMailer.
 
+[![BuildStatus](https://travis-ci.org/eddiezane/sendgrid-actionmailer.svg?branch=master)](https://travis-ci.org/eddiezane/sendgrid-actionmailer)
+
 ## Installation
 
 Add this line to your application's Gemfile:
