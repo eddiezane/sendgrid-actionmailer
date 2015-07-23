@@ -46,6 +46,20 @@ module SendGridActionMailer
         expect(client.sent_mail.from).to eq('taco@cat.limo')
       end
 
+      context 'from contains a friendly name' do
+        before { mail.from = 'Taco Cat <taco@cat.limo>'}
+
+        it 'sets from' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.from).to eq('taco@cat.limo')
+        end
+
+        it 'sets from_name' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.from_name).to eq('Taco Cat')
+        end
+      end
+
       it 'sets subject' do
         mailer.deliver!(mail)
         expect(client.sent_mail.subject).to eq('Hello, world!')
