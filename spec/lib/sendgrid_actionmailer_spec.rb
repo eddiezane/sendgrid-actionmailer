@@ -140,6 +140,44 @@ module SendGridActionMailer
           expect(attachment[:file].read).to eq(File.read(__FILE__))
         end
       end
+
+      context 'SMTPAPI' do
+        context 'it is not JSON' do
+          before { mail['X-SMTPAPI'] = '<xml>JSON sucks!</xml>' }
+
+          it 'raises a useful error' do
+            expect { mailer.deliver!(mail) }.to raise_error(
+              ArgumentError,
+              "X-SMTPAPI is not JSON: <xml>JSON sucks!</xml>"
+            )
+          end
+        end
+
+        context 'a category is present' do
+          before do
+            mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.category).to include('food_feline')
+          end
+        end
+
+        context 'multiple categories are present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              category: %w[food_feline cuisine_canine]
+            }.to_json
+          end
+
+          it 'attaches them all' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.category)
+              .to include('food_feline', 'cuisine_canine')
+          end
+        end
+      end
     end
   end
 end
