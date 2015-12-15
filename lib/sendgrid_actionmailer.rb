@@ -1,5 +1,6 @@
 require 'sendgrid_actionmailer/version'
 require 'sendgrid_actionmailer/railtie' if defined? Rails
+require 'sendgrid_actionmailer/smtpapi_setter'
 
 require 'tempfile'
 
@@ -28,17 +29,7 @@ module SendGridActionMailer
         m.subject   = mail.subject
       end
 
-      smtpapi = mail['X-SMTPAPI']
-      if smtpapi && smtpapi.value
-        begin
-          data = JSON.parse(smtpapi.value)
-          Array(data['category']).each do |category|
-            email.smtpapi.add_category(category)
-          end
-        rescue JSON::ParserError
-          raise ArgumentError, "X-SMTPAPI is not JSON: #{smtpapi.value}"
-        end
-      end
+      SmtpapiSetter.new(email, mail).set!
 
       # TODO: This is pretty ugly
       case mail.mime_type
