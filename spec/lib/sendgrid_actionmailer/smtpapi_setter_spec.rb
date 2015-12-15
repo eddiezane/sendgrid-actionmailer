@@ -34,5 +34,27 @@ describe SendGridActionMailer::SmtpapiSetter do
           .to include('food_feline', 'cuisine_canine')
       end
     end
+
+    context 'a unique_arg is present' do
+      let(:smtpapi) { { unique_args: { foo: 'bar' } }.to_json }
+
+      it 'adds it' do
+        subject.set!
+        expect(email.smtpapi.unique_args).to have_key('foo')
+        expect(email.smtpapi.unique_args['foo']).to eq('bar')
+      end
+    end
+
+    context 'two unique_args are present' do
+      let(:smtpapi) { { unique_args: { foo: 'bar', baz: 'bing' } }.to_json }
+
+      it 'adds both' do
+        subject.set!
+        expect(email.smtpapi.unique_args).to have_key('foo')
+        expect(email.smtpapi.unique_args['foo']).to eq('bar')
+        expect(email.smtpapi.unique_args).to have_key('baz')
+        expect(email.smtpapi.unique_args['baz']).to eq('bing')
+      end
+    end
   end
 end
