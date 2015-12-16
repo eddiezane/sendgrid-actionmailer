@@ -56,5 +56,14 @@ describe SendGridActionMailer::SmtpapiSetter do
         expect(email.smtpapi.unique_args['baz']).to eq('bing')
       end
     end
+
+    context 'IP pools are present' do
+      let(:smtpapi) { { ip_pool: 'client' }.to_json }
+
+      it 'adds the IP pool' do
+        subject.set!
+        expect(email.smtpapi.ip_pool).to eq('client')
+      end
+    end
   end
 end

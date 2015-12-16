@@ -9,6 +9,7 @@ module SendGridActionMailer
       return unless smtpapi_field && smtpapi_field.value
       set_categories
       set_unique_args
+      set_ip_pool
     rescue JSON::ParserError
       raise ArgumentError, "X-SMTPAPI is not JSON: #{smtpapi_field.value}"
     end
@@ -31,6 +32,10 @@ module SendGridActionMailer
       (data['unique_args'] || {}).each do |key, value|
         email.smtpapi.add_unique_arg(key, value)
       end
+    end
+
+    def set_ip_pool
+      email.smtpapi.set_ip_pool(data['ip_pool']) if data.key?('ip_pool')
     end
   end
 end
