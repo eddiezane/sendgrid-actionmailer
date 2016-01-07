@@ -17,7 +17,7 @@ And then execute:
 Or install it yourself as:
 
     $ gem install sendgrid-actionmailer
-    
+
 
 ## Usage
 
@@ -26,7 +26,61 @@ Edit your `config/environments/$ENVIRONMENT.rb` file and add/change the followin
 	  config.action_mailer.delivery_method = :sendgrid_actionmailer
 	  config.action_mailer.sendgrid_actionmailer_settings = {api_user: ENV['SENDGRID_USERNAME'], api_key: ENV['SENDGRID_PASSWORD']}
 
-TODO: Add ActionMailer instructions.
+To take advantage of the SendGrid SMTP API using this gem, set the `X-SMTPAPI` header of
+the Mail object.
+
+#### Category
+
+Tag emails with a <a href="https://sendgrid.com/docs/API_Reference/SMTP_API/categories.html">category</a>.
+
+```ruby
+class PromoMailer < ActionMailer::Base
+  def weekly_sales(recipient)
+    mail(
+      to: recipient,
+      subject: 'Big Weekly Sales!',
+      'X-SMTPAPI' => { category: 'promo' }.to_json
+    )
+  end
+end
+```
+
+#### Unique Arguments
+
+Add 1 or more <a href="https://sendgrid.com/docs/API_Reference/SMTP_API/unique_arguments.html">unique arguments</a>
+to add context to tracking.
+
+```ruby
+class PromoMailer < ActionMailer::Base
+  def weekly_sales(recipient)
+    mail(
+      to: recipient,
+      subject: 'Big Weekly Sales!',
+      'X-SMTPAPI' => { unique_args: { user: recipient, promo: 'weekly' } }.to_json
+    )
+  end
+end
+```
+
+#### IP Pool
+
+Select which <a href="https://sendgrid.com/docs/API_Reference/Web_API_v3/IP_Management/ip_pools.html">IP pool</a>
+the email should be delivered from. Note: the named IP pool must be set up before the
+email is delivered.
+
+```ruby
+class PromoMailer < ActionMailer::Base
+  default('X-SMTPAPI' => { ip_pool: 'promotions' }.to_json)
+
+  def weekly_sales(recipient)
+    mail(
+      to: recipient,
+      subject: 'Big Weekly Sales!'
+    )
+  end
+end
+```
+
 
 ## Contributing
 

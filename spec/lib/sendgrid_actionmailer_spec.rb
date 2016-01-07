@@ -46,6 +46,24 @@ module SendGridActionMailer
         expect(client.sent_mail.from).to eq('taco@cat.limo')
       end
 
+      context 'there are ccs' do
+        before { mail.cc = 'burrito@cat.limo' }
+
+        it 'sets cc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.cc).to eq(%w[burrito@cat.limo])
+        end
+      end
+
+      context 'there are bccs' do
+        before { mail.bcc = 'nachos@cat.limo' }
+
+        it 'sets bcc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.bcc).to eq(%w[nachos@cat.limo])
+        end
+      end
+
       context 'from contains a friendly name' do
         before { mail.from = 'Taco Cat <taco@cat.limo>'}
 
@@ -142,17 +160,6 @@ module SendGridActionMailer
       end
 
       context 'SMTPAPI' do
-        context 'it is not JSON' do
-          before { mail['X-SMTPAPI'] = '<xml>JSON sucks!</xml>' }
-
-          it 'raises a useful error' do
-            expect { mailer.deliver!(mail) }.to raise_error(
-              ArgumentError,
-              "X-SMTPAPI is not JSON: <xml>JSON sucks!</xml>"
-            )
-          end
-        end
-
         context 'a category is present' do
           before do
             mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
@@ -161,20 +168,6 @@ module SendGridActionMailer
           it 'gets attached' do
             mailer.deliver!(mail)
             expect(client.sent_mail.smtpapi.category).to include('food_feline')
-          end
-        end
-
-        context 'multiple categories are present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              category: %w[food_feline cuisine_canine]
-            }.to_json
-          end
-
-          it 'attaches them all' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category)
-              .to include('food_feline', 'cuisine_canine')
           end
         end
       end
