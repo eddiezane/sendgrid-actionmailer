@@ -1,3 +1,4 @@
+sudo: false
 language: ruby
 rvm:
 - 2.2.1
@@ -5,3 +6,6 @@ rvm:
 - 1.9.3
 before_script:
 - bundle install
+gemfile:
+  - gemfiles/mail_2.5.gemfile
+  - gemfiles/mail_2.6.gemfile
