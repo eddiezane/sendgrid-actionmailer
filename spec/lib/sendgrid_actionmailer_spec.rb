@@ -134,10 +134,10 @@ module SendGridActionMailer
         end
 
         it 'adds the attachment' do
+          expect(mail.attachments.first.read).to eq(File.read(__FILE__))
           mailer.deliver!(mail)
           attachment = client.sent_mail.attachments.first
           expect(attachment[:name]).to eq('specs.rb')
-          expect(attachment[:file].read).to eq(File.read(__FILE__))
         end
       end
 
