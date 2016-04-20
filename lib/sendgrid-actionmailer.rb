@@ -1,0 +1,1 @@
+require "sendgrid_actionmailer"
