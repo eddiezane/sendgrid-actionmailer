@@ -1,0 +1,63 @@
+PATH
+  remote: ../
+  specs:
+    sendgrid-actionmailer (0.0.5)
+      mail (~> 2.5)
+      sendgrid-ruby (~> 0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    appraisal (2.1.0)
+      bundler
+      rake
+      thor (>= 0.14.0)
+    diff-lcs (1.2.5)
+    domain_name (0.5.20160310)
+      unf (>= 0.0.5, < 1.0.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
+    mail (2.6.4)
+      mime-types (>= 1.16, < 4)
+    mime-types (2.99.1)
+    netrc (0.11.0)
+    rake (11.1.2)
+    rest-client (1.8.0)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
+    rspec (3.2.0)
+      rspec-core (~> 3.2.0)
+      rspec-expectations (~> 3.2.0)
+      rspec-mocks (~> 3.2.0)
+    rspec-core (3.2.3)
+      rspec-support (~> 3.2.0)
+    rspec-expectations (3.2.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.2.0)
+    rspec-mocks (3.2.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.2.0)
+    rspec-support (3.2.2)
+    sendgrid-ruby (0.0.3)
+      rest-client
+      smtpapi
+    smtpapi (0.1.0)
+    thor (0.19.1)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  appraisal (~> 2.1.0)
+  bundler (~> 1.6)
+  mail (= 2.6.4)
+  rake
+  rspec (~> 3.2.0)
+  sendgrid-actionmailer!
+
+BUNDLED WITH
+   1.11.2
