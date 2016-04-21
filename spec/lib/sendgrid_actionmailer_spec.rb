@@ -41,6 +41,24 @@ module SendGridActionMailer
         expect(client.sent_mail.to).to eq(%w[test@sendgrid.com])
       end
 
+      context 'there are ccs' do
+        before { mail.cc = 'burrito@cat.limo' }
+
+        it 'sets cc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.cc).to eq(%w[burrito@cat.limo])
+        end
+      end
+
+      context 'there are bccs' do
+        before { mail.bcc = 'nachos@cat.limo' }
+
+        it 'sets bcc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.bcc).to eq(%w[nachos@cat.limo])
+        end
+      end
+
       it 'sets from' do
         mailer.deliver!(mail)
         expect(client.sent_mail.from).to eq('taco@cat.limo')
