@@ -171,6 +171,43 @@ module SendGridActionMailer
           end
         end
 
+        context 'filters are present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              filters: {
+                clicktrack: {
+                  settings: {
+                    enable: 0
+                  }
+                },
+                dkim: {
+                  settings: {
+                    domain: 'example.com',
+                    use_from: false
+                  }
+                }
+              }
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.filters).to eq({
+              'clicktrack' => {
+                'settings' => {
+                  'enable' => 0
+                }
+              },
+              'dkim' => {
+                'settings' => {
+                  'domain' => 'example.com',
+                  'use_from' => false
+                }
+              }
+            })
+          end
+        end
+
         context 'a category is present' do
           before do
             mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
@@ -178,7 +215,7 @@ module SendGridActionMailer
 
           it 'gets attached' do
             mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category).to include('food_feline')
+            expect(client.sent_mail.smtpapi.category).to eq('food_feline')
           end
         end
 
@@ -191,8 +228,131 @@ module SendGridActionMailer
 
           it 'attaches them all' do
             mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category)
-              .to include('food_feline', 'cuisine_canine')
+            expect(client.sent_mail.smtpapi.category).to eq([
+              'food_feline',
+              'cuisine_canine',
+            ])
+          end
+        end
+
+        context 'send_at is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              send_at: 1409348513
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.send_at).to eq(1409348513)
+          end
+        end
+
+        context 'send_each_at is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              send_each_at: [1409348513, 1409348514]
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.send_each_at).to eq([1409348513, 1409348514])
+          end
+        end
+
+        context 'section is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              section: {
+                ":sectionName1" => "section 1 text",
+                ":sectionName2" => "section 2 text"
+              }
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.section).to eq({
+              ":sectionName1" => "section 1 text",
+              ":sectionName2" => "section 2 text"
+            })
+          end
+        end
+
+        context 'sub is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              sub: {
+                "-name-" => [
+                  "John",
+                  "Jane"
+                ],
+                "-customerID-" => [
+                  "1234",
+                  "5678"
+                ],
+              }
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.sub).to eq({
+              "-name-" => [
+                "John",
+                "Jane"
+              ],
+              "-customerID-" => [
+                "1234",
+                "5678"
+              ],
+            })
+          end
+        end
+
+        context 'asm_group_id is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              asm_group_id: 1
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.asm_group_id).to eq(1)
+          end
+        end
+
+        context 'unique_args are present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              unique_args: {
+                customerAccountNumber: "55555",
+                activationAttempt: "1",
+              }
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.unique_args).to eq({
+              "customerAccountNumber" => "55555",
+              "activationAttempt" => "1",
+            })
+          end
+        end
+
+        context 'ip_pool is present' do
+          before do
+            mail['X-SMTPAPI'] = {
+              ip_pool: "pool_name"
+            }.to_json
+          end
+
+          it 'gets attached' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.ip_pool).to eq("pool_name")
           end
         end
       end
