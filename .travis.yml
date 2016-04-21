@@ -6,3 +6,6 @@ rvm:
 - 1.9.3
 before_script:
 - bundle install
+gemfile:
+  - gemfiles/mail_2.5.gemfile
+  - gemfiles/mail_2.6.gemfile
