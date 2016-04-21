@@ -21,6 +21,8 @@ module SendGridActionMailer
 
       email = SendGrid::Mail.new do |m|
         m.to        = mail[:to].addresses
+        m.cc        = mail[:cc].addresses  if mail[:cc]
+        m.bcc       = mail[:bcc].addresses if mail[:bcc]
         m.from      = from.address
         m.from_name = from.display_name
         m.subject   = mail.subject
