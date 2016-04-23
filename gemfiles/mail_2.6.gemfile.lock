@@ -1,9 +1,9 @@
 PATH
   remote: ../
   specs:
-    sendgrid-actionmailer (0.0.5)
+    sendgrid-actionmailer (0.1.0)
       mail (~> 2.5)
-      sendgrid-ruby (~> 0.0)
+      sendgrid-ruby (< 2.0)
 
 GEM
   remote: https://rubygems.org/
@@ -13,19 +13,14 @@ GEM
       rake
       thor (>= 0.14.0)
     diff-lcs (1.2.5)
-    domain_name (0.5.20160310)
-      unf (>= 0.0.5, < 1.0.0)
-    http-cookie (1.0.2)
-      domain_name (~> 0.5)
+    faraday (0.9.2)
+      multipart-post (>= 1.2, < 3)
     mail (2.6.4)
       mime-types (>= 1.16, < 4)
     mime-types (2.99.1)
-    netrc (0.11.0)
+    mimemagic (0.3.1)
+    multipart-post (2.0.0)
     rake (11.1.2)
-    rest-client (1.8.0)
-      http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 3.0)
-      netrc (~> 0.7)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)
@@ -39,14 +34,12 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.2.0)
     rspec-support (3.2.2)
-    sendgrid-ruby (0.0.3)
-      rest-client
-      smtpapi
+    sendgrid-ruby (1.1.6)
+      faraday (~> 0.9)
+      mimemagic
+      smtpapi (~> 0.1)
     smtpapi (0.1.0)
     thor (0.19.1)
-    unf (0.1.4)
-      unf_ext
-    unf_ext (0.0.7.2)
 
 PLATFORMS
   ruby
