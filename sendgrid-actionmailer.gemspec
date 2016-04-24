@@ -6,8 +6,8 @@ require 'sendgrid_actionmailer/version'
 Gem::Specification.new do |spec|
   spec.name          = 'sendgrid-actionmailer'
   spec.version       = SendGridActionMailer::VERSION
-  spec.authors       = ['Eddie Zaneski']
-  spec.email         = ['community@sendgrid.com']
+  spec.authors       = ['Eddie Zaneski', 'Kristján Pétursson', 'Nick Muerdter']
+  spec.email         = ['eddiezane@gmail.com', 'kristjan@gmail.com', 'stuff@nickm.org']
   spec.summary       = %q{SendGrid support for ActionMailer.}
   spec.description   = %q{Use ActionMailer with SendGrid's Web API.}
   spec.homepage      = 'https://github.com/eddiezane/sendgrid-actionmailer'
