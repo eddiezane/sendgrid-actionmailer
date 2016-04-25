@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    sendgrid-actionmailer (0.1.0)
+    sendgrid-actionmailer (0.1.1)
       mail (~> 2.5)
       sendgrid-ruby (< 2.0)
 
