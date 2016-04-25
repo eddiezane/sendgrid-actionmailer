@@ -17,6 +17,7 @@ module SendGridActionMailer
     end
 
     def deliver!(mail)
+      attachment_tempfiles = []
       from = mail[:from].addrs.first
 
       email = SendGrid::Mail.new do |m|
@@ -87,20 +88,24 @@ module SendGridActionMailer
 
         # This needs to be done better
         mail.attachments.each do |a|
-          begin
-            t = Tempfile.new("sendgrid-actionmailer")
-            t.binmode
-            t.write(a.read)
-            t.flush
-            email.add_attachment(t, a.filename)
-          ensure
-            t.close
-            t.unlink
-          end
+          t = Tempfile.new("sendgrid-actionmailer")
+          t.binmode
+          t.write(a.read)
+          t.flush
+          t.rewind
+          email.add_attachment(t, a.filename)
+          attachment_tempfiles << t
         end
       end
 
       client.send(email)
+    ensure
+      # Close and delete the attachment tempfiles after the e-mail has been
+      # sent.
+      attachment_tempfiles.each do |file|
+        file.close
+        file.unlink
+      end
     end
   end
 end
