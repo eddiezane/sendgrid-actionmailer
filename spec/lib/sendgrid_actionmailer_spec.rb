@@ -1,4 +1,5 @@
 require 'mail'
+require 'webmock/rspec'
 
 module SendGridActionMailer
   describe DeliveryMethod do
@@ -6,11 +7,12 @@ module SendGridActionMailer
       DeliveryMethod.new(api_user: 'user', api_key: 'key')
     end
 
-    class TestClient
+    class TestClient < SendGrid::Client
       attr_reader :sent_mail
 
       def send(mail)
         @sent_mail = mail
+        super(mail)
       end
     end
 
@@ -34,7 +36,11 @@ module SendGridActionMailer
         )
       end
 
-      before { allow(SendGrid::Client).to receive(:new).and_return(client) }
+      before do
+        stub_request(:any, 'https://api.sendgrid.com/api/mail.send.json')
+          .to_return(body: {message: 'success'}.to_json, status: 200, headers: {'X-TEST' => 'yes'})
+        allow(SendGrid::Client).to receive(:new).and_return(client)
+      end
 
       it 'sets to' do
         mailer.deliver!(mail)
@@ -156,6 +162,7 @@ module SendGridActionMailer
           mailer.deliver!(mail)
           attachment = client.sent_mail.attachments.first
           expect(attachment[:name]).to eq('specs.rb')
+          expect(attachment[:file].content_type.to_s).to eq('application/x-ruby')
         end
       end
 
