@@ -26,6 +26,8 @@ module SendGridActionMailer
         m.bcc       = mail[:bcc].addresses if mail[:bcc]
         m.from      = from.address
         m.from_name = from.display_name
+        m.reply_to  = mail[:reply_to].addresses.first if mail[:reply_to]
+        m.date      = mail[:date].to_s if mail[:date]
         m.subject   = mail.subject
       end
 
