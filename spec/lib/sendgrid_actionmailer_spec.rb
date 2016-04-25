@@ -162,6 +162,7 @@ module SendGridActionMailer
           mailer.deliver!(mail)
           attachment = client.sent_mail.attachments.first
           expect(attachment[:name]).to eq('specs.rb')
+          expect(attachment[:file].content_type.to_s).to eq('application/x-ruby')
         end
       end
 

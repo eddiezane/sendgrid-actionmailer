@@ -88,7 +88,9 @@ module SendGridActionMailer
 
         # This needs to be done better
         mail.attachments.each do |a|
-          t = Tempfile.new("sendgrid-actionmailer")
+          # Create a tempfile with the same file extension as the real file
+          # for sendgrid-ruby's mime type lookups.
+          t = Tempfile.new(["sendgrid-actionmailer", File.extname(a.filename)])
           t.binmode
           t.write(a.read)
           t.flush
