@@ -193,6 +193,43 @@ module SendGridActionMailer
         end
       end
 
+      context 'multipart/related' do
+        before do
+          mail.content_type 'multipart/related'
+          mail.part do |part|
+            part.text_part = Mail::Part.new do
+              content_type 'text/plain'
+              body 'I heard you like pineapple.'
+            end
+            part.html_part = Mail::Part.new do
+              content_type 'text/html'
+              body 'I heard you like <b>pineapple</b>.'
+            end
+          end
+          mail.attachments.inline['specs.rb'] = File.read(__FILE__)
+        end
+
+        it 'sets the text body' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.text).to eq('I heard you like pineapple.')
+        end
+
+        it 'sets the html body' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.html)
+            .to eq('I heard you like <b>pineapple</b>.')
+        end
+
+        it 'adds the inline attachment' do
+          expect(mail.attachments.first.read).to eq(File.read(__FILE__))
+          mailer.deliver!(mail)
+          content = client.sent_mail.contents.first
+          expect(content[:name]).to eq('specs.rb')
+          expect(content[:file].content_type.to_s).to eq('application/x-ruby')
+          expect(content[:cid].class).to eq(String)
+        end
+      end
+
       context 'SMTPAPI' do
         context 'it is not JSON' do
           before { mail['X-SMTPAPI'] = '<xml>JSON sucks!</xml>' }
