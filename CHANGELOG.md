@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.2.1 - 2016-04-26
+
+### Fixed
+
+- Fix handling of multipart/related inline attachments.
+
 ## 0.2.0 - 2016-04-25
 
 ### Added
