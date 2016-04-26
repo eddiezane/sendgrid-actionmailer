@@ -65,6 +65,33 @@ module SendGridActionMailer
         end
       end
 
+      context 'there is a reply to' do
+        before { mail.reply_to = 'nachos@cat.limo' }
+
+        it 'sets reply_to' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.reply_to).to eq('nachos@cat.limo')
+        end
+      end
+
+      context 'there is a reply to with a friendly name' do
+        before { mail.reply_to = 'Taco Cat <nachos@cat.limo>' }
+
+        it 'sets reply_to' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.reply_to).to eq('nachos@cat.limo')
+        end
+      end
+
+      context 'there is a date' do
+        before { mail.date = Time.utc(2016) }
+
+        it 'sets date' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail.date).to eq("Fri, 01 Jan 2016 00:00:00 +0000")
+        end
+      end
+
       it 'sets from' do
         mailer.deliver!(mail)
         expect(client.sent_mail.from).to eq('taco@cat.limo')
