@@ -32,6 +32,18 @@ module SendGridActionMailer
       end
 
       smtpapi = mail['X-SMTPAPI']
+
+      # If multiple X-SMTPAPI headers are present on the message, then pick the
+      # first one. This may happen when X-SMTPAPI is set with defaults at the
+      # class-level (using defaults()), as well as inside an individual method
+      # (using headers[]=). In this case, we'll defer to the more specific
+      # header set in the individual method, which is the first header
+      # (somewhat counter-intuitively:
+      # https://github.com/rails/rails/issues/15912).
+      if(smtpapi.kind_of?(Array))
+        smtpapi = smtpapi.first
+      end
+
       if smtpapi && smtpapi.value
         begin
           data = JSON.parse(smtpapi.value)
