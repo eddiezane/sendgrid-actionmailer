@@ -1,7 +1,8 @@
 require 'sendgrid_actionmailer/version'
 require 'sendgrid_actionmailer/railtie' if defined? Rails
 
-require 'tempfile'
+require 'fileutils'
+require 'tmpdir'
 
 require 'sendgrid-ruby'
 
@@ -17,7 +18,7 @@ module SendGridActionMailer
     end
 
     def deliver!(mail)
-      attachment_tempfiles = []
+      attachment_temp_dirs = []
       from = mail[:from].addrs.first
 
       email = SendGrid::Mail.new do |m|
@@ -96,21 +97,30 @@ module SendGridActionMailer
       when 'text/html'
         # HTML
         email.html = mail.body.decoded
-      when 'multipart/alternative', 'multipart/mixed'
+      when 'multipart/alternative', 'multipart/mixed', 'multipart/related'
         email.html = mail.html_part.decoded if mail.html_part
         email.text = mail.text_part.decoded if mail.text_part
 
-        # This needs to be done better
         mail.attachments.each do |a|
-          # Create a tempfile with the same file extension as the real file
-          # for sendgrid-ruby's mime type lookups.
-          t = Tempfile.new(["sendgrid-actionmailer", File.extname(a.filename)])
-          t.binmode
-          t.write(a.read)
-          t.flush
-          t.rewind
-          email.add_attachment(t, a.filename)
-          attachment_tempfiles << t
+          # Write the attachment into a temporary location, since sendgrid-ruby
+          # expects to deal with files.
+          #
+          # We write to a temporary directory (instead of a tempfile) and then
+          # use the original filename inside there, since sendgrid-ruby's
+          # add_content method pulls the filename from the path (so tempfiles
+          # would lead to random filenames).
+          temp_dir = Dir.mktmpdir('sendgrid-actionmailer')
+          attachment_temp_dirs << temp_dir
+          temp_path = File.join(temp_dir, a.filename)
+          File.open(temp_path, 'wb') do |file|
+            file.write(a.read)
+          end
+
+          if(mail.mime_type == 'multipart/related' && a.header[:content_id])
+            email.add_content(temp_path, a.header[:content_id].field.content_id)
+          else
+            email.add_attachment(temp_path, a.filename)
+          end
         end
       end
 
@@ -118,9 +128,8 @@ module SendGridActionMailer
     ensure
       # Close and delete the attachment tempfiles after the e-mail has been
       # sent.
-      attachment_tempfiles.each do |file|
-        file.close
-        file.unlink
+      attachment_temp_dirs.each do |dir|
+        FileUtils.remove_entry_secure(dir)
       end
     end
   end
