@@ -389,6 +389,18 @@ module SendGridActionMailer
             expect(client.sent_mail.smtpapi.ip_pool).to eq("pool_name")
           end
         end
+
+        context 'multiple X-SMTPAPI headers are present' do
+          before do
+            mail['X-SMTPAPI'] = { category: 'food_canine' }.to_json
+            mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
+          end
+
+          it 'uses the last header' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail.smtpapi.category).to eq('food_canine')
+          end
+        end
       end
     end
   end
