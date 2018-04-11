@@ -17,7 +17,7 @@ module SendGridActionMailer
     def deliver!(mail)
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.smtp_envelope_from)
-        m.subjcet = mail.subject
+        m.subject = mail.subject
 
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
         m.add_personalization Personalization.new.tap do |p|
