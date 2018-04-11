@@ -4,6 +4,7 @@ require 'sendgrid-ruby'
 
 module SendGridActionMailer
   class DeliveryMethod
+    # TODO: use custom class to customer excpetion payload
     SendgridDeliveryError = Class.new(StandardError)
 
     include SendGrid
@@ -86,7 +87,7 @@ module SendGridActionMailer
     end
 
     def perform_send_request(email)
-      result = client._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
+      result = client.mail._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
 
       if result.status_code.start_with?('4')
         message = JSON.parse(result.body).fetch('errors').pop.fetch('message')
