@@ -20,11 +20,11 @@ module SendGridActionMailer
         m.subject = mail.subject
 
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
-        m.add_personalization Personalization.new.tap do |p|
+        m.add_personalization(Personalization.new.tap do |p|
           m.to.each { |to| p.add_to(to_email(to)) }
           m.cc.each { |cc| p.add_cc(to_email(cc)) } unless m.cc.nil?
           m.bcc.each { |bcc| p.add_cc(to_email(bcc)) } unless m.cc.nil?
-        end
+        end)
       end
 
       case mail.mime_type
