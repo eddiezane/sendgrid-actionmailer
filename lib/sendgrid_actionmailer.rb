@@ -8,13 +8,13 @@ module SendGridActionMailer
 
     include SendGrid
 
-    attr_reader :client, :raise_on_error
+    attr_reader :client, :raise_delivery_errors
 
     def initialize(params)
       # SendGrid::API is a wrapper of that...
       # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
       @client = SendGrid::API.new(api_key: params.fetch(:api_key)).client
-      @raise_on_error = params.fetch(:raise_on_error, false)
+      @raise_delivery_errors = params.fetch(:raise_delivery_errors, false)
     end
 
     def deliver!(mail)
@@ -92,7 +92,7 @@ module SendGridActionMailer
         message = JSON.parse(r.body).fetch('errors').pop.fetch('message')
         full_message = "Sendgrid delivery failed with #{result.status} #{message}"
 
-        raise_on_error ? raise(SendgridDeliveryError, full_message) : warn(full_message)
+        raise_delivery_errors ? raise(SendgridDeliveryError, full_message) : warn(full_message)
       end
 
       result
