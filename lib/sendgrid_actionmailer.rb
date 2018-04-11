@@ -11,7 +11,7 @@ module SendGridActionMailer
     def initialize(params)
       # Actually it is...
       # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
-      @client = SendGrid::API.new(params.slice(:api_key, :host)).client
+      @client = SendGrid::API.new(api_key: params.fetch(:api_key)).client
     end
 
     def deliver!(mail)
