@@ -7,22 +7,26 @@ module SendGridActionMailer
       DeliveryMethod.new(api_user: 'user', api_key: 'key')
     end
 
-    class TestClient < SendGrid::Client
+    class TestClient
       attr_reader :sent_mail
 
       def send(mail)
         @sent_mail = mail
         super(mail)
       end
-    end
 
-    describe '#initialize' do
-      it 'configures the client API user' do
-        expect(mailer.client.api_user).to eq('user')
+      def mail()
+        self
       end
 
-      it 'configures the client API key' do
-        expect(mailer.client.api_key).to eq('key')
+      def _(param)
+        return self if param == 'send'
+        raise "Unknown param #{param.inspect}"
+      end
+
+      def post(request_body:)
+        @sent_mail = request_body
+        OpenStruct.new(status_code: '200')
       end
     end
 
@@ -32,7 +36,7 @@ module SendGridActionMailer
         Mail.new(
           to:      'test@sendgrid.com',
           from:    'taco@cat.limo',
-          subject: 'Hello, world!'
+          subject: 'Hello, world!',
         )
       end
 
@@ -44,7 +48,7 @@ module SendGridActionMailer
 
       it 'sets to' do
         mailer.deliver!(mail)
-        expect(client.sent_mail.to).to eq(%w[test@sendgrid.com])
+        expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}]})
       end
 
       context 'there are ccs' do
@@ -52,7 +56,7 @@ module SendGridActionMailer
 
         it 'sets cc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.cc).to eq(%w[burrito@cat.limo])
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "cc"=>[{"email"=>"burrito@cat.limo"}]})
         end
       end
 
@@ -61,7 +65,7 @@ module SendGridActionMailer
 
         it 'sets bcc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.bcc).to eq(%w[nachos@cat.limo])
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo"}]})
         end
       end
 
@@ -70,7 +74,7 @@ module SendGridActionMailer
 
         it 'sets reply_to' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.reply_to).to eq('nachos@cat.limo')
+          expect(client.sent_mail['reply_to']).to eq({'email' => 'nachos@cat.limo'})
         end
       end
 
@@ -79,22 +83,8 @@ module SendGridActionMailer
 
         it 'sets reply_to' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.reply_to).to eq('nachos@cat.limo')
+          expect(client.sent_mail['reply_to']).to eq('email' => 'nachos@cat.limo')
         end
-      end
-
-      context 'there is a date' do
-        before { mail.date = Time.utc(2016) }
-
-        it 'sets date' do
-          mailer.deliver!(mail)
-          expect(client.sent_mail.date).to eq("Fri, 01 Jan 2016 00:00:00 +0000")
-        end
-      end
-
-      it 'sets from' do
-        mailer.deliver!(mail)
-        expect(client.sent_mail.from).to eq('taco@cat.limo')
       end
 
       context 'from contains a friendly name' do
@@ -102,32 +92,38 @@ module SendGridActionMailer
 
         it 'sets from' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.from).to eq('taco@cat.limo')
-        end
-
-        it 'sets from_name' do
-          mailer.deliver!(mail)
-          expect(client.sent_mail.from_name).to eq('Taco Cat')
+          expect(client.sent_mail['from']).to eq('email' => 'taco@cat.limo', 'name' => 'Taco Cat')
         end
       end
 
       it 'sets subject' do
         mailer.deliver!(mail)
-        expect(client.sent_mail.subject).to eq('Hello, world!')
+        expect(client.sent_mail['subject']).to eq('Hello, world!')
       end
 
       it 'sets a text/plain body' do
         mail.content_type = 'text/plain'
         mail.body = 'I heard you like pineapple.'
         mailer.deliver!(mail)
-        expect(client.sent_mail.text).to eq('I heard you like pineapple.')
+        expect(client.sent_mail['content']).to eq([
+          {
+            'type' => 'text/plain',
+            'value' => 'I heard you like pineapple.'
+          }
+        ])
       end
 
       it 'sets a text/html body' do
         mail.content_type = 'text/html'
         mail.body = 'I heard you like <b>pineapple</b>.'
         mailer.deliver!(mail)
-        expect(client.sent_mail.html).to eq('I heard you like <b>pineapple</b>.')
+
+        expect(client.sent_mail['content']).to eq([
+          {
+            'type' => 'text/html',
+            'value' => 'I heard you like <b>pineapple</b>.'
+          }
+        ])
       end
 
       context 'multipart/alternative' do
@@ -145,15 +141,18 @@ module SendGridActionMailer
           end
         end
 
-        it 'sets the text body' do
+        it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.text).to eq('I heard you like pineapple.')
-        end
-
-        it 'sets the html body' do
-          mailer.deliver!(mail)
-          expect(client.sent_mail.html)
-            .to eq('I heard you like <b>pineapple</b>.')
+          expect(client.sent_mail['content']).to eq([
+            {
+              'type' => 'text/html',
+              'value' => 'I heard you like <b>pineapple</b>.'
+            },
+            {
+              'type' => 'text/plain',
+              'value' => 'I heard you like pineapple.'
+            }
+          ])
         end
       end
 
@@ -173,23 +172,26 @@ module SendGridActionMailer
           mail.attachments['specs.rb'] = File.read(__FILE__)
         end
 
-        it 'sets the text body' do
+        it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.text).to eq('I heard you like pineapple.')
-        end
-
-        it 'sets the html body' do
-          mailer.deliver!(mail)
-          expect(client.sent_mail.html)
-            .to eq('I heard you like <b>pineapple</b>.')
+          expect(client.sent_mail['content']).to eq([
+            {
+              'type' => 'text/html',
+              'value' => 'I heard you like <b>pineapple</b>.'
+            },
+            {
+              'type' => 'text/plain',
+              'value' => 'I heard you like pineapple.'
+            }
+          ])
         end
 
         it 'adds the attachment' do
           expect(mail.attachments.first.read).to eq(File.read(__FILE__))
           mailer.deliver!(mail)
-          attachment = client.sent_mail.attachments.first
-          expect(attachment[:name]).to eq('specs.rb')
-          expect(attachment[:file].content_type.to_s).to eq('application/x-ruby')
+          attachment = client.sent_mail['attachments'].first
+          expect(attachment['filename']).to eq('specs.rb')
+          expect(attachment['type']).to eq('application/x-ruby')
         end
       end
 
@@ -209,234 +211,27 @@ module SendGridActionMailer
           mail.attachments.inline['specs.rb'] = File.read(__FILE__)
         end
 
-        it 'sets the text body' do
+        it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail.text).to eq('I heard you like pineapple.')
-        end
-
-        it 'sets the html body' do
-          mailer.deliver!(mail)
-          expect(client.sent_mail.html)
-            .to eq('I heard you like <b>pineapple</b>.')
+          expect(client.sent_mail['content']).to eq([
+            {
+              'type' => 'text/html',
+              'value' => 'I heard you like <b>pineapple</b>.'
+            },
+            {
+              'type' => 'text/plain',
+              'value' => 'I heard you like pineapple.'
+            }
+          ])
         end
 
         it 'adds the inline attachment' do
           expect(mail.attachments.first.read).to eq(File.read(__FILE__))
           mailer.deliver!(mail)
-          content = client.sent_mail.contents.first
-          expect(content[:name]).to eq('specs.rb')
-          expect(content[:file].content_type.to_s).to eq('application/x-ruby')
-          expect(content[:cid].class).to eq(String)
-        end
-      end
-
-      context 'SMTPAPI' do
-        context 'it is not JSON' do
-          before { mail['X-SMTPAPI'] = '<xml>JSON sucks!</xml>' }
-
-          it 'raises a useful error' do
-            expect { mailer.deliver!(mail) }.to raise_error(
-              ArgumentError,
-              "X-SMTPAPI is not JSON: <xml>JSON sucks!</xml>"
-            )
-          end
-        end
-
-        context 'filters are present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              filters: {
-                clicktrack: {
-                  settings: {
-                    enable: 0
-                  }
-                },
-                dkim: {
-                  settings: {
-                    domain: 'example.com',
-                    use_from: false
-                  }
-                }
-              }
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.filters).to eq({
-              'clicktrack' => {
-                'settings' => {
-                  'enable' => 0
-                }
-              },
-              'dkim' => {
-                'settings' => {
-                  'domain' => 'example.com',
-                  'use_from' => false
-                }
-              }
-            })
-          end
-        end
-
-        context 'a category is present' do
-          before do
-            mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category).to eq('food_feline')
-          end
-        end
-
-        context 'multiple categories are present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              category: %w[food_feline cuisine_canine]
-            }.to_json
-          end
-
-          it 'attaches them all' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category).to eq([
-              'food_feline',
-              'cuisine_canine',
-            ])
-          end
-        end
-
-        context 'send_at is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              send_at: 1409348513
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.send_at).to eq(1409348513)
-          end
-        end
-
-        context 'send_each_at is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              send_each_at: [1409348513, 1409348514]
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.send_each_at).to eq([1409348513, 1409348514])
-          end
-        end
-
-        context 'section is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              section: {
-                ":sectionName1" => "section 1 text",
-                ":sectionName2" => "section 2 text"
-              }
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.section).to eq({
-              ":sectionName1" => "section 1 text",
-              ":sectionName2" => "section 2 text"
-            })
-          end
-        end
-
-        context 'sub is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              sub: {
-                "-name-" => [
-                  "John",
-                  "Jane"
-                ],
-                "-customerID-" => [
-                  "1234",
-                  "5678"
-                ],
-              }
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.sub).to eq({
-              "-name-" => [
-                "John",
-                "Jane"
-              ],
-              "-customerID-" => [
-                "1234",
-                "5678"
-              ],
-            })
-          end
-        end
-
-        context 'asm_group_id is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              asm_group_id: 1
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.asm_group_id).to eq(1)
-          end
-        end
-
-        context 'unique_args are present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              unique_args: {
-                customerAccountNumber: "55555",
-                activationAttempt: "1",
-              }
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.unique_args).to eq({
-              "customerAccountNumber" => "55555",
-              "activationAttempt" => "1",
-            })
-          end
-        end
-
-        context 'ip_pool is present' do
-          before do
-            mail['X-SMTPAPI'] = {
-              ip_pool: "pool_name"
-            }.to_json
-          end
-
-          it 'gets attached' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.ip_pool).to eq("pool_name")
-          end
-        end
-
-        context 'multiple X-SMTPAPI headers are present' do
-          before do
-            mail['X-SMTPAPI'] = { category: 'food_canine' }.to_json
-            mail['X-SMTPAPI'] = { category: 'food_feline' }.to_json
-          end
-
-          it 'uses the last header' do
-            mailer.deliver!(mail)
-            expect(client.sent_mail.smtpapi.category).to eq('food_canine')
-          end
+          content = client.sent_mail['attachments'].first
+          expect(content['filename']).to eq('specs.rb')
+          expect(content['type']).to eq('application/x-ruby')
+          expect(content['content_id'].class).to eq(String)
         end
       end
     end

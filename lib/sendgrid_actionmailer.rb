@@ -20,7 +20,8 @@ module SendGridActionMailer
 
     def deliver!(mail)
       sendgrid_mail = Mail.new.tap do |m|
-        m.from = to_email(mail.smtp_envelope_from)
+        m.from = to_email(mail.from)
+        m.reply_to = to_email(mail.reply_to.first) if mail.reply_to && mail.reply_to.first
         m.subject = mail.subject
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
         m.add_personalization(to_personalizations(mail))
@@ -37,21 +38,31 @@ module SendGridActionMailer
       Content.new(type: "text/#{type}", value: value)
     end
 
-    def to_email(str, **opts)
-      Email.new(email: str, **opts)
+    def to_email(input)
+      if input.is_a?(String)
+        Email.new(email: input)
+      elsif input.is_a?(::Mail::AddressContainer)
+        to_email(input.instance_variable_get('@field') || input.first)
+      elsif input.is_a?(::Mail::StructuredField)
+        to_email input.value
+      elsif input.nil?
+        nil
+      else
+        puts "unknown type #{input.class.name}"
+      end
     end
 
     def to_personalizations(mail)
       Personalization.new.tap do |p|
         mail.to.each { |to| p.add_to(to_email(to)) }
         mail.cc.each { |cc| p.add_cc(to_email(cc)) } unless mail.cc.nil?
-        mail.bcc.each { |bcc| p.add_cc(to_email(bcc)) } unless mail.cc.nil?
+        mail.bcc.each { |bcc| p.add_bcc(to_email(bcc)) } unless mail.bcc.nil?
       end
     end
 
     def to_attachment(part)
       Attachment.new.tap do |a|
-        a.content = part.body.decoded
+        a.content = Base64.strict_encode64(part.body.decoded)
         a.type = part.mime_type
         a.filename = part.filename
 
@@ -59,7 +70,7 @@ module SendGridActionMailer
         a.disposition = disposition unless disposition.nil?
 
         has_content_id = part.header && part.has_content_id?
-        a.content_id = part.header['content_id'] if has_content_id
+        a.content_id = part.header['content_id'].value if has_content_id
       end
     end
 
@@ -89,7 +100,7 @@ module SendGridActionMailer
     def perform_send_request(email)
       result = client.mail._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
 
-      if result.status_code.start_with?('4')
+      if result.status_code && result.status_code.start_with?('4')
         message = JSON.parse(result.body).fetch('errors').pop.fetch('message')
         full_message = "Sendgrid delivery failed with #{result.status_code} #{message}"
 
