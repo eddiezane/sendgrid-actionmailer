@@ -31,6 +31,11 @@ module SendGridActionMailer
       perform_send_request(sendgrid_mail)
     end
 
+    def settings
+      # required to be compatible with .deliver!
+      {}
+    end
+
     private
 
     # type should be either :plain or :html

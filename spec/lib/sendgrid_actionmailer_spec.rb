@@ -143,16 +143,14 @@ module SendGridActionMailer
 
         it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['content']).to eq([
-            {
-              'type' => 'text/html',
-              'value' => 'I heard you like <b>pineapple</b>.'
-            },
-            {
-              'type' => 'text/plain',
-              'value' => 'I heard you like pineapple.'
-            }
-          ])
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/html',
+            'value' => 'I heard you like <b>pineapple</b>.'
+          })
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/plain',
+            'value' => 'I heard you like pineapple.'
+          })
         end
       end
 
@@ -174,16 +172,14 @@ module SendGridActionMailer
 
         it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['content']).to eq([
-            {
-              'type' => 'text/html',
-              'value' => 'I heard you like <b>pineapple</b>.'
-            },
-            {
-              'type' => 'text/plain',
-              'value' => 'I heard you like pineapple.'
-            }
-          ])
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/html',
+            'value' => 'I heard you like <b>pineapple</b>.'
+          })
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/plain',
+            'value' => 'I heard you like pineapple.'
+          })
         end
 
         it 'adds the attachment' do
@@ -213,16 +209,14 @@ module SendGridActionMailer
 
         it 'sets the text and html body' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['content']).to eq([
-            {
-              'type' => 'text/html',
-              'value' => 'I heard you like <b>pineapple</b>.'
-            },
-            {
-              'type' => 'text/plain',
-              'value' => 'I heard you like pineapple.'
-            }
-          ])
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/html',
+            'value' => 'I heard you like <b>pineapple</b>.'
+          })
+          expect(client.sent_mail['content']).to include({
+            'type' => 'text/plain',
+            'value' => 'I heard you like pineapple.'
+          })
         end
 
         it 'adds the inline attachment' do
