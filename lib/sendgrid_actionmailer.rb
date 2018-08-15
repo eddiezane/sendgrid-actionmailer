@@ -1,136 +1,113 @@
 require 'sendgrid_actionmailer/version'
 require 'sendgrid_actionmailer/railtie' if defined? Rails
-
-require 'fileutils'
-require 'tmpdir'
-
 require 'sendgrid-ruby'
 
 module SendGridActionMailer
   class DeliveryMethod
-    attr_reader :client
+    # TODO: use custom class to customer excpetion payload
+    SendgridDeliveryError = Class.new(StandardError)
+
+    include SendGrid
+
+    attr_reader :client, :raise_delivery_errors
 
     def initialize(params)
-      @client = SendGrid::Client.new do |c|
-        c.api_user = params[:api_user]
-        c.api_key  = params[:api_key]
-      end
+      # SendGrid::API is a wrapper of that...
+      # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
+      @client = SendGrid::API.new(api_key: params.fetch(:api_key)).client
+      @raise_delivery_errors = params.fetch(:raise_delivery_errors, false)
     end
 
     def deliver!(mail)
-      attachment_temp_dirs = []
-      from = mail[:from].addrs.first
-
-      email = SendGrid::Mail.new do |m|
-        m.to        = mail[:to].addresses
-        m.cc        = mail[:cc].addresses  if mail[:cc]
-        m.bcc       = mail[:bcc].addresses if mail[:bcc]
-        m.from      = from.address
-        m.from_name = from.display_name
-        m.reply_to  = mail[:reply_to].addresses.first if mail[:reply_to]
-        m.date      = mail[:date].to_s if mail[:date]
-        m.subject   = mail.subject
+      sendgrid_mail = Mail.new.tap do |m|
+        m.from = to_email(mail.from)
+        m.reply_to = to_email(mail.reply_to.first) if mail.reply_to && mail.reply_to.first
+        m.subject = mail.subject
+        # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
+        m.add_personalization(to_personalizations(mail))
       end
 
-      smtpapi = mail['X-SMTPAPI']
+      add_content(sendgrid_mail, mail)
+      perform_send_request(sendgrid_mail)
+    end
 
-      # If multiple X-SMTPAPI headers are present on the message, then pick the
-      # first one. This may happen when X-SMTPAPI is set with defaults at the
-      # class-level (using defaults()), as well as inside an individual method
-      # (using headers[]=). In this case, we'll defer to the more specific
-      # header set in the individual method, which is the first header
-      # (somewhat counter-intuitively:
-      # https://github.com/rails/rails/issues/15912).
-      if(smtpapi.kind_of?(Array))
-        smtpapi = smtpapi.first
+    private
+
+    # type should be either :plain or :html
+    def to_content(type, value)
+      Content.new(type: "text/#{type}", value: value)
+    end
+
+    def to_email(input)
+      if input.is_a?(String)
+        Email.new(email: input)
+      elsif input.is_a?(::Mail::AddressContainer)
+        to_email(input.instance_variable_get('@field') || input.first)
+      elsif input.is_a?(::Mail::StructuredField)
+        to_email input.value
+      elsif input.nil?
+        nil
+      else
+        puts "unknown type #{input.class.name}"
       end
+    end
 
-      if smtpapi && smtpapi.value
-        begin
-          data = JSON.parse(smtpapi.value)
-
-          if data['filters']
-            email.smtpapi.set_filters(data['filters'])
-          end
-
-          if data['category']
-            email.smtpapi.set_categories(data['category'])
-          end
-
-          if data['send_at']
-            email.smtpapi.set_send_at(data['send_at'])
-          end
-
-          if data['send_each_at']
-            email.smtpapi.set_send_each_at(data['send_each_at'])
-          end
-
-          if data['section']
-            email.smtpapi.set_sections(data['section'])
-          end
-
-          if data['sub']
-            email.smtpapi.set_substitutions(data['sub'])
-          end
-
-          if data['asm_group_id']
-            email.smtpapi.set_asm_group(data['asm_group_id'])
-          end
-
-          if data['unique_args']
-            email.smtpapi.set_unique_args(data['unique_args'])
-          end
-
-          if data['ip_pool']
-            email.smtpapi.set_ip_pool(data['ip_pool'])
-          end
-        rescue JSON::ParserError
-          raise ArgumentError, "X-SMTPAPI is not JSON: #{smtpapi.value}"
-        end
+    def to_personalizations(mail)
+      Personalization.new.tap do |p|
+        mail.to.each { |to| p.add_to(to_email(to)) }
+        mail.cc.each { |cc| p.add_cc(to_email(cc)) } unless mail.cc.nil?
+        mail.bcc.each { |bcc| p.add_bcc(to_email(bcc)) } unless mail.bcc.nil?
       end
+    end
 
-      # TODO: This is pretty ugly
+    def to_attachment(part)
+      Attachment.new.tap do |a|
+        a.content = Base64.strict_encode64(part.body.decoded)
+        a.type = part.mime_type
+        a.filename = part.filename
+
+        disposition = get_disposition(part)
+        a.disposition = disposition unless disposition.nil?
+
+        has_content_id = part.header && part.has_content_id?
+        a.content_id = part.header['content_id'].value if has_content_id
+      end
+    end
+
+    def get_disposition(message)
+      return if message.header.nil?
+      content_disp = message.header[:content_disposition]
+      return unless content_disp.respond_to?(:disposition_type)
+      content_disp.disposition_type
+    end
+
+    def add_content(sendgrid_mail, mail)
       case mail.mime_type
       when 'text/plain'
-        # Text
-        email.text = mail.body.decoded
+        sendgrid_mail.add_content(to_content(:plain, mail.body.decoded))
       when 'text/html'
-        # HTML
-        email.html = mail.body.decoded
+        sendgrid_mail.add_content(to_content(:html, mail.body.decoded))
       when 'multipart/alternative', 'multipart/mixed', 'multipart/related'
-        email.html = mail.html_part.decoded if mail.html_part
-        email.text = mail.text_part.decoded if mail.text_part
+        sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if mail.text_part
+        sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if mail.html_part
 
-        mail.attachments.each do |a|
-          # Write the attachment into a temporary location, since sendgrid-ruby
-          # expects to deal with files.
-          #
-          # We write to a temporary directory (instead of a tempfile) and then
-          # use the original filename inside there, since sendgrid-ruby's
-          # add_content method pulls the filename from the path (so tempfiles
-          # would lead to random filenames).
-          temp_dir = Dir.mktmpdir('sendgrid-actionmailer')
-          attachment_temp_dirs << temp_dir
-          temp_path = File.join(temp_dir, a.filename)
-          File.open(temp_path, 'wb') do |file|
-            file.write(a.read)
-          end
-
-          if(mail.mime_type == 'multipart/related' && a.header[:content_id])
-            email.add_content(temp_path, a.header[:content_id].field.content_id)
-          else
-            email.add_attachment(temp_path, a.filename)
-          end
+        mail.attachments.each do |part|
+          sendgrid_mail.add_attachment(to_attachment(part))
         end
       end
+    end
 
-      client.send(email)
-    ensure
-      # Close and delete the attachment tempfiles after the e-mail has been
-      # sent.
-      attachment_temp_dirs.each do |dir|
-        FileUtils.remove_entry_secure(dir)
+    def perform_send_request(email)
+      result = client.mail._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
+
+      if result.status_code && result.status_code.start_with?('4')
+        message = JSON.parse(result.body).fetch('errors').pop.fetch('message')
+        full_message = "Sendgrid delivery failed with #{result.status_code} #{message}"
+
+        raise_delivery_errors ? raise(SendgridDeliveryError, full_message) : warn(full_message)
       end
+
+      result
     end
   end
 end
