@@ -1,14 +1,12 @@
 # SendGrid ActionMailer
 
-An ActionMailer adapter to send email using SendGrid's HTTPS Web API (instead of SMTP).
-
-> THIS FORK IS AIMED TO PROVIDE COMPATABILITY WITH RAILS v5 AND SENDGRID v5. IT'S EXPERIMENTAL AND HAVE NO TESTS YET.
+An ActionMailer adapter to send email using SendGrid's HTTPS Web API (instead of SMTP). Compatible with Rails 5 and Sendgrid API v5.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-    gem 'sendgrid-actionmailer', github: 'dikond/sendgrid-actionmailer', branch: 'sendgrid_5'
+    gem 'sendgrid-actionmailer', github: 'eddiezane/sendgrid-actionmailer'
 
 ## Usage
 
