@@ -262,6 +262,29 @@ module SendGridActionMailer
           expect(client.sent_mail['ip_pool_name']).to eq('marketing')
         end
 
+        context 'parse object' do
+          it "should parse 1.8 hash" do
+            asm = {'group_id' => 99, 'groups_to_display' => [4,5,6,7,8]}
+            mail['asm'] = asm
+            mailer.deliver!(mail)
+            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
+          end
+
+          it "should parse 1.9 hash" do
+            asm = { group_id: 99, groups_to_display: [4,5,6,7,8]}
+            mail['asm'] = asm
+            mailer.deliver!(mail)
+            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
+          end
+
+          it "should parse json" do
+            asm = {'group_id' => 99, 'groups_to_display' => [4,5,6,7,8]}
+            mail['asm'] = asm.to_json
+            mailer.deliver!(mail)
+            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
+          end
+        end
+
         context 'mail_settings' do
           it 'sets bcc' do
             bcc = { 'bcc' => { 'enable' => true, 'email' => 'test@example.com' }}

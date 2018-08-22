@@ -136,4 +136,67 @@ The threshold used to determine if your content qualifies as spam on a scale fro
 An Inbound Parse URL that you would like a copy of your email along with the spam report to be sent to.
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  mail_settings:{ spam_check: {enable: true, threshold: 1, post_to_url: 'https://spamcatcher.sendgrid.com'}})```
+### tracking_settings(json)
+Settings to determine how you would like to track the metrics of how your recipients interact with your email.
 
+#### click_tracking(object)
+Allows you to track whether a recipient clicked a link in your email.
+
+##### enable (boolean)
+Indicates if this setting is enabled.
+
+#####  enable_text (boolean)
+Indicates if this setting should be included in the text/plain portion of your email.
+
+```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: false, enable_text: false }})```
+
+#### open_tracking (object)
+Allows you to track whether the email was opened or not, but including a single pixel image in the body of the content. When the pixel is loaded, we can log that the email was opened.
+
+##### enable (boolean)
+Indicates if this setting is enabled.
+
+##### substitution_tag (string)
+Allows you to specify a substitution tag that you can insert in the body of your email at a location that you desire. This tag will be replaced by the open tracking pixel.
+
+```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: true, substitution_tag: 'Optional tag to replace with the open image in the body of the message' }})```
+
+#### subscription_tracking (object)
+Allows you to insert a subscription management link at the bottom of the text and html bodies of your email. If you would like to specify the location of the link within your email, you may use the substitution_tag.
+
+##### enable (boolean)
+Indicates if this setting is enabled.
+
+##### text (string)
+Text to be appended to the email, with the subscription tracking link. You may control where the link is by using the tag <% %>
+
+##### html (string)
+HTML to be appended to the email, with the subscription tracking link. You may control where the link is by using the tag <% %>
+
+##### substitution_tag (string)
+A tag that will be replaced with the unsubscribe URL. for example: [unsubscribe_url]. If this parameter is used, it will override both the text and html parameters. The URL of the link will be placed at the substitution tag’s location, with no additional formatting.
+
+```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: true, text: 'text to insert into the text/plain portion of the message', html: 'html to insert into the text/html portion of the message', substitution_tag: 'Optional tag to replace with the open image in the body of the message' }})```
+
+#### ganalytics (object)
+Allows you to enable tracking provided by Google Analytics.
+
+##### enable (boolean)
+Indicates if this setting is enabled.
+
+##### utm_source (string)
+Name of the referrer source. (e.g. Google, SomeDomain.com, or Marketing Email)
+
+##### utm_medium (string)
+Name of the marketing medium. (e.g. Email)
+
+##### utm_term (string)
+Used to identify any paid keywords.
+
+##### utm_content (string)
+Used to differentiate your campaign from advertisements.
+
+##### utm_campaign (string)
+The name of the campaign.
+
+```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: true, utm_source: 'some source', utm_medium: 'some medium', utm_term: 'some term', utm_content: 'some content', utm_campaign: 'some campaign' }})```
