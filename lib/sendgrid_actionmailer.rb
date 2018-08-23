@@ -78,6 +78,9 @@ module SendGridActionMailer
         to_emails(mail.to).each { |to| p.add_to(to) }
         to_emails(mail.cc).each { |cc| p.add_cc(cc) }
         to_emails(mail.bcc).each { |bcc| p.add_bcc(bcc) }
+        p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
+        p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
+        p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
       end
     end
 

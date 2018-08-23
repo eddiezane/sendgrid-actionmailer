@@ -200,3 +200,11 @@ Used to differentiate your campaign from advertisements.
 The name of the campaign.
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: true, utm_source: 'some source', utm_medium: 'some medium', utm_term: 'some term', utm_content: 'some content', utm_campaign: 'some campaign' }})```
+
+### Unsubscribe Links
+
+Sendgrid unfortunately uses <% %> for their default substitution syntax, which makes it incompatible with Rails templates. Their proposed solution is to use Personalization Substitutions with the v3 Mail Send Endpoint.  This gem makes that modification to make the following Rails friendly unsubscribe urls.
+
+ * `<a href="%asm_group_unsubscribe_raw_url%">Unsubscribe</a>`
+ * `<a href="%asm_global_unsubscribe_raw_url%">Unsubscribe from List</a>`
+ * `<a href="%asm_preferences_raw_url%">Manage Email Preferences</a>`
