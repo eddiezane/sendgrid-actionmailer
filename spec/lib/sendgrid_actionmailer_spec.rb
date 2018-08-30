@@ -4,7 +4,7 @@ require 'webmock/rspec'
 module SendGridActionMailer
   describe DeliveryMethod do
     subject(:mailer) do
-      DeliveryMethod.new(api_user: 'user', api_key: 'key')
+      DeliveryMethod.new(api_key: 'key')
     end
 
     class TestClient
@@ -30,6 +30,33 @@ module SendGridActionMailer
       end
     end
 
+    describe 'settings' do
+      it 'has correct api_key' do
+        m = DeliveryMethod.new(api_key: 'ABCDEFG')
+        expect(m.settings[:api_key]).to eq('ABCDEFG')
+      end
+
+      it 'default raise_delivery_errors' do
+        m = DeliveryMethod.new()
+        expect(m.settings[:raise_delivery_errors]).to eq(false)
+      end
+
+      it 'sets raise_delivery_errors' do
+        m = DeliveryMethod.new(raise_delivery_errors: true)
+        expect(m.settings[:raise_delivery_errors]).to eq(true)
+      end
+
+      it 'default return_response' do
+        m = DeliveryMethod.new()
+        expect(mailer.settings[:return_response]).to eq(nil)
+      end
+
+      it 'sets return_response' do
+        m = DeliveryMethod.new(return_response: true)
+        expect(m.settings[:return_response]).to eq(true)
+      end
+    end
+
     describe '#deliver!' do
       let(:client) { TestClient.new }
       let(:mail) do
@@ -49,6 +76,17 @@ module SendGridActionMailer
       it 'sets to' do
         mailer.deliver!(mail)
         expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}]})
+      end
+
+      it 'returns mailer itself' do
+        ret = mailer.deliver!(mail)
+        expect(ret).to eq(mailer)
+      end
+
+      it 'returns api response' do
+        m = DeliveryMethod.new(return_response: true, api_key: 'key')
+        ret = m.deliver!(mail)
+        expect(ret.status_code).to eq('200')
       end
 
       context 'there are ccs' do
