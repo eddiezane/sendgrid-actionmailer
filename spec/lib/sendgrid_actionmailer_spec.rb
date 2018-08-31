@@ -75,7 +75,7 @@ module SendGridActionMailer
 
       it 'sets to' do
         mailer.deliver!(mail)
-        expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}]})
+        expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com"}]})
       end
 
       it 'returns mailer itself' do
@@ -94,7 +94,7 @@ module SendGridActionMailer
 
         it 'sets to' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
         end
       end
 
@@ -103,7 +103,7 @@ module SendGridActionMailer
 
         it 'sets to' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
         end
       end
 
@@ -112,7 +112,7 @@ module SendGridActionMailer
 
         it 'sets cc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "cc"=>[{"email"=>"burrito@cat.limo"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com"}], "cc"=>[{"email"=>"burrito@cat.limo"}]})
         end
       end
 
@@ -121,7 +121,7 @@ module SendGridActionMailer
 
         it 'sets bcc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo"}]})
         end
       end
 
@@ -130,7 +130,7 @@ module SendGridActionMailer
 
         it 'sets bcc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
         end
       end
 
@@ -139,7 +139,7 @@ module SendGridActionMailer
 
         it 'sets bcc' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
+          expect(client.sent_mail['personalizations'][0]).to include({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
         end
       end
 
