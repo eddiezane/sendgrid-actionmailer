@@ -51,6 +51,24 @@ module SendGridActionMailer
         expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}]})
       end
 
+      context 'to with a friendly name' do
+        before { mail.to = 'Test SendGrid <test@sendgrid.com>' }
+
+        it 'sets to' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
+        end
+      end
+
+      context 'to with a friendly name (with quotes)' do
+        before { mail.to = '"Test SendGrid" <test@sendgrid.com>' }
+
+        it 'sets to' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com", "name"=>"Test SendGrid"}]})
+        end
+      end
+
       context 'there are ccs' do
         before { mail.cc = 'burrito@cat.limo' }
 
@@ -69,6 +87,24 @@ module SendGridActionMailer
         end
       end
 
+      context 'there are bccs with a friendly name' do
+        before { mail.bcc = 'Taco Cat <nachos@cat.limo>' }
+
+        it 'sets bcc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
+        end
+      end
+
+      context 'there are bccs with a friendly name (with quotes)' do
+        before { mail.bcc = '"Taco Cat" <nachos@cat.limo>' }
+
+        it 'sets bcc' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to eq({"to"=>[{"email"=>"test@sendgrid.com"}], "bcc"=>[{"email"=>"nachos@cat.limo", "name"=>"Taco Cat"}]})
+        end
+      end
+
       context 'there is a reply to' do
         before { mail.reply_to = 'nachos@cat.limo' }
 
@@ -83,12 +119,21 @@ module SendGridActionMailer
 
         it 'sets reply_to' do
           mailer.deliver!(mail)
-          expect(client.sent_mail['reply_to']).to eq('email' => 'nachos@cat.limo')
+          expect(client.sent_mail['reply_to']).to eq('email' => 'nachos@cat.limo', 'name' => 'Taco Cat')
         end
       end
 
       context 'from contains a friendly name' do
         before { mail.from = 'Taco Cat <taco@cat.limo>'}
+
+        it 'sets from' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['from']).to eq('email' => 'taco@cat.limo', 'name' => 'Taco Cat')
+        end
+      end
+
+      context 'from contains a friendly name (with quotes)' do
+        before { mail.from = '"Taco Cat" <taco@cat.limo>'}
 
         it 'sets from' do
           mailer.deliver!(mail)
