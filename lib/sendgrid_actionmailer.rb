@@ -21,7 +21,7 @@ module SendGridActionMailer
     def deliver!(mail)
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.from)
-        m.reply_to = to_email(mail.reply_to.first) if mail.reply_to && mail.reply_to.first
+        m.reply_to = to_email(mail.reply_to)
         m.subject = mail.subject
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
         m.add_personalization(to_personalizations(mail))
@@ -44,14 +44,24 @@ module SendGridActionMailer
     end
 
     def to_email(input)
+      to_emails(input).first
+    end
+
+    def to_emails(input)
       if input.is_a?(String)
-        Email.new(email: input)
+        [Email.new(email: input)]
+      elsif input.is_a?(::Mail::AddressContainer) && !input.instance_variable_get('@field').nil?
+        input.instance_variable_get('@field').addrs.map do |addr| # Mail::Address
+          Email.new(email: addr.address, name: addr.name)
+        end
       elsif input.is_a?(::Mail::AddressContainer)
-        to_email(input.instance_variable_get('@field') || input.first)
+        input.map do |addr|
+          Email.new(email: addr)
+        end
       elsif input.is_a?(::Mail::StructuredField)
-        to_email input.value
+        [Email.new(email: input.value)]
       elsif input.nil?
-        nil
+        []
       else
         puts "unknown type #{input.class.name}"
       end
@@ -59,9 +69,9 @@ module SendGridActionMailer
 
     def to_personalizations(mail)
       Personalization.new.tap do |p|
-        mail.to.each { |to| p.add_to(to_email(to)) }
-        mail.cc.each { |cc| p.add_cc(to_email(cc)) } unless mail.cc.nil?
-        mail.bcc.each { |bcc| p.add_bcc(to_email(bcc)) } unless mail.bcc.nil?
+        to_emails(mail.to).each { |to| p.add_to(to) }
+        to_emails(mail.cc).each { |cc| p.add_cc(cc) }
+        to_emails(mail.bcc).each { |bcc| p.add_bcc(bcc) }
       end
     end
 
