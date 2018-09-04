@@ -100,10 +100,13 @@ module SendGridActionMailer
       end
     end
 
-    def perform_send_request(email)
+    def client
       # SendGrid::API is a wrapper of that...
       # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
-      client = SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+      @client ||= SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+    end
+
+    def perform_send_request(email)
       result = client.mail._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
 
       if result.status_code && result.status_code.start_with?('4')
