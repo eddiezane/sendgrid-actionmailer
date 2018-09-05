@@ -9,13 +9,14 @@ module SendGridActionMailer
 
     include SendGrid
 
-    attr_reader :client, :raise_delivery_errors
+    DEFAULTS = {
+      raise_delivery_errors: false,
+    }
 
-    def initialize(params)
-      # SendGrid::API is a wrapper of that...
-      # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
-      @client = SendGrid::API.new(api_key: params.fetch(:api_key)).client
-      @raise_delivery_errors = params.fetch(:raise_delivery_errors, false)
+    attr_accessor :settings
+
+    def initialize(**params)
+      self.settings = DEFAULTS.merge(params)
     end
 
     def deliver!(mail)
@@ -28,12 +29,9 @@ module SendGridActionMailer
       end
 
       add_content(sendgrid_mail, mail)
-      perform_send_request(sendgrid_mail)
-    end
+      response = perform_send_request(sendgrid_mail)
 
-    def settings
-      # required to be compatible with .deliver!
-      {}
+      settings[:return_response] ? response : self
     end
 
     private
@@ -112,6 +110,12 @@ module SendGridActionMailer
       end
     end
 
+    def client
+      # SendGrid::API is a wrapper of that...
+      # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
+      @client ||= SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+    end
+
     def perform_send_request(email)
       result = client.mail._('send').post(request_body: email.to_json) # ლ(ಠ益ಠლ) that API
 
@@ -119,7 +123,7 @@ module SendGridActionMailer
         message = JSON.parse(result.body).fetch('errors').pop.fetch('message')
         full_message = "Sendgrid delivery failed with #{result.status_code} #{message}"
 
-        raise_delivery_errors ? raise(SendgridDeliveryError, full_message) : warn(full_message)
+        settings[:raise_delivery_errors] ? raise(SendgridDeliveryError, full_message) : warn(full_message)
       end
 
       result
