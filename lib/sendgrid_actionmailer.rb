@@ -121,17 +121,21 @@ module SendGridActionMailer
       end
     end
 
+    def json_parse(text, symbolize=true)
+      JSON.parse(text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: symbolize)
+    end
+
     def add_send_options(sendgrid_mail, mail)
       if mail['template_id']
          sendgrid_mail.template_id = mail['template_id'].to_s
       end
       if mail['sections']
-        JSON.parse(mail['sections'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }).each do |key, value|
+        json_parse(mail['sections'].value, false).each do |key, value|
           sendgrid_mail.add_section(Section.new(key: key, value: value))
         end
       end
       if mail['headers']
-        JSON.parse(mail['headers'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }).each do |key, value|
+        json_parse(mail['headers'].value, false).each do |key, value|
           sendgrid_mail.add_header(Header.new(key: key, value: value))
         end
       end
@@ -141,7 +145,7 @@ module SendGridActionMailer
         end
       end
       if mail['custom_args']
-        JSON.parse(mail['custom_args'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }).each do |key, value|
+        json_parse(mail['custom_args'].value, false).each do |key, value|
           sendgrid_mail.add_custom_arg(CustomArg.new(key: key, value: value))
         end
       end
@@ -150,7 +154,7 @@ module SendGridActionMailer
         sendgrid_mail.batch_id= mail['batch_id'].to_s
       end
       if mail['asm']
-        asm = JSON.parse(mail['asm'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: true)
+        asm = json_parse(mail['asm'].value)
         asm =  asm.delete_if { |key, value| !key.to_s.match(/(group_id)|(groups_to_display)/) }
         if asm[:group_id]
           sendgrid_mail.asm = ASM.new(asm)
@@ -163,7 +167,7 @@ module SendGridActionMailer
 
     def add_mail_settings(sendgrid_mail, mail)
       if mail['mail_settings']
-        settings = JSON.parse(mail['mail_settings'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: true)
+        settings = json_parse(mail['mail_settings'].value)
         sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
           if settings[:bcc]
             m.bcc = BccSettings.new(settings[:bcc])
@@ -186,7 +190,7 @@ module SendGridActionMailer
 
     def add_tracking_settings(sendgrid_mail, mail)
       if mail['tracking_settings']
-        settings = JSON.parse(mail['tracking_settings'].value.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: true)
+        settings = json_parse(mail['tracking_settings'].value)
         sendgrid_mail.tracking_settings = TrackingSettings.new.tap do |t|
           if settings[:click_tracking]
             t.click_tracking = ClickTracking.new(settings[:click_tracking])
