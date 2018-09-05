@@ -29,12 +29,20 @@ module SendGridActionMailer
       end
 
       add_content(sendgrid_mail, mail)
+      add_send_options(sendgrid_mail, mail)
+      add_mail_settings(sendgrid_mail, mail)
+      add_tracking_settings(sendgrid_mail, mail)
+
       response = perform_send_request(sendgrid_mail)
 
       settings[:return_response] ? response : self
     end
 
     private
+
+    def client
+      @client ||= SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+    end
 
     # type should be either :plain or :html
     def to_content(type, value)
@@ -70,6 +78,9 @@ module SendGridActionMailer
         to_emails(mail.to).each { |to| p.add_to(to) }
         to_emails(mail.cc).each { |cc| p.add_cc(cc) }
         to_emails(mail.bcc).each { |bcc| p.add_bcc(bcc) }
+        p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
+        p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
+        p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
       end
     end
 
@@ -110,10 +121,91 @@ module SendGridActionMailer
       end
     end
 
-    def client
-      # SendGrid::API is a wrapper of that...
-      # https://github.com/sendgrid/ruby-http-client/blob/master/lib/ruby_http_client.rb
-      @client ||= SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+    def json_parse(text, symbolize=true)
+      JSON.parse(text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: symbolize)
+    end
+
+    def add_send_options(sendgrid_mail, mail)
+      if mail['template_id']
+         sendgrid_mail.template_id = mail['template_id'].to_s
+      end
+      if mail['sections']
+        json_parse(mail['sections'].value, false).each do |key, value|
+          sendgrid_mail.add_section(Section.new(key: key, value: value))
+        end
+      end
+      if mail['headers']
+        json_parse(mail['headers'].value, false).each do |key, value|
+          sendgrid_mail.add_header(Header.new(key: key, value: value))
+        end
+      end
+      if mail['categories']
+        mail['categories'].value.split(",").each do |value|
+          sendgrid_mail.add_category(Category.new(name: value.strip))
+        end
+      end
+      if mail['custom_args']
+        json_parse(mail['custom_args'].value, false).each do |key, value|
+          sendgrid_mail.add_custom_arg(CustomArg.new(key: key, value: value))
+        end
+      end
+      if mail['send_at'] && mail['batch_id']
+        sendgrid_mail.send_at = mail['send_at'].value.to_i
+        sendgrid_mail.batch_id= mail['batch_id'].to_s
+      end
+      if mail['asm']
+        asm = json_parse(mail['asm'].value)
+        asm =  asm.delete_if { |key, value| !key.to_s.match(/(group_id)|(groups_to_display)/) }
+        if asm[:group_id]
+          sendgrid_mail.asm = ASM.new(asm)
+        end
+      end
+      if mail['ip_pool_name']
+        sendgrid_mail.ip_pool_name = mail['ip_pool_name'].to_s
+      end
+    end
+
+    def add_mail_settings(sendgrid_mail, mail)
+      if mail['mail_settings']
+        settings = json_parse(mail['mail_settings'].value)
+        sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
+          if settings[:bcc]
+            m.bcc = BccSettings.new(settings[:bcc])
+          end
+          if settings[:bypass_list_management]
+            m.bypass_list_management = BypassListManagement.new(settings[:bypass_list_management])
+          end
+          if settings[:footer]
+            m.footer = Footer.new(settings[:footer])
+          end
+          if settings[:sandbox_mode]
+            m.sandbox_mode = SandBoxMode.new(settings[:sandbox_mode])
+          end
+          if settings[:spam_check]
+            m.spam_check = SpamCheck.new(settings[:spam_check])
+          end
+        end
+      end
+    end
+
+    def add_tracking_settings(sendgrid_mail, mail)
+      if mail['tracking_settings']
+        settings = json_parse(mail['tracking_settings'].value)
+        sendgrid_mail.tracking_settings = TrackingSettings.new.tap do |t|
+          if settings[:click_tracking]
+            t.click_tracking = ClickTracking.new(settings[:click_tracking])
+          end
+          if settings[:open_tracking]
+            t.open_tracking = OpenTracking.new(settings[:open_tracking])
+          end
+          if settings[:subscription_tracking]
+            t.subscription_tracking = SubscriptionTracking.new(settings[:subscription_tracking])
+          end
+          if settings[:ganalytics]
+            t.ganalytics = Ganalytics.new(settings[:ganalytics])
+          end
+        end
+      end
     end
 
     def perform_send_request(email)
