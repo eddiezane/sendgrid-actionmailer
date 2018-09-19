@@ -351,6 +351,11 @@ module SendGridActionMailer
             expect(client.sent_mail['tracking_settings']).to eq(tracking)
           end
         end
+
+        # TBD if the official gem has this feature released
+        context 'dynamic template data' do
+
+        end
       end
 
       context 'multipart/alternative' do
