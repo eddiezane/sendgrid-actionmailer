@@ -10,22 +10,34 @@ module SendGridActionMailer
     include SendGrid
 
     DEFAULTS = {
-      raise_delivery_errors: false,
-    }
+      raise_delivery_errors: false
+    }.freeze
 
     attr_accessor :settings
+    attr_reader :api_key
 
     def initialize(**params)
       self.settings = DEFAULTS.merge(params)
     end
 
     def deliver!(mail)
+      @api_key = nil
+
+      api_key_header_field = mail.header_fields.find do |field|
+        field.name.eql?('delivery-method-options') && field.value.include?('api_key')
+      end
+
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.from)
         m.reply_to = to_email(mail.reply_to)
         m.subject = mail.subject
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
         m.add_personalization(to_personalizations(mail))
+      end
+
+      if api_key_header_field
+        # Pull SendGrid API Key from delivery_method_options
+        @api_key = JSON.parse(api_key_header_field.value.gsub('=>', ':'))['api_key']
       end
 
       add_content(sendgrid_mail, mail)
@@ -41,7 +53,9 @@ module SendGridActionMailer
     private
 
     def client
-      @client ||= SendGrid::API.new(api_key: settings.fetch(:api_key)).client
+      key = @api_key || settings.fetch(:api_key)
+
+      @client ||= SendGrid::API.new(api_key: key).client
     end
 
     # type should be either :plain or :html

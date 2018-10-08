@@ -59,6 +59,8 @@ module SendGridActionMailer
 
     describe '#deliver!' do
       let(:client) { TestClient.new }
+      let(:client_parent) { double(client: client) }
+
       let(:mail) do
         Mail.new(
           to:      'test@sendgrid.com',
@@ -71,6 +73,25 @@ module SendGridActionMailer
         stub_request(:any, 'https://api.sendgrid.com/api/mail.send.json')
           .to_return(body: {message: 'success'}.to_json, status: 200, headers: {'X-TEST' => 'yes'})
         allow(SendGrid::Client).to receive(:new).and_return(client)
+        allow(SendGrid::API).to receive(:new).and_return(client_parent)
+      end
+
+      context 'with dynamic api_key' do
+        let(:mail) do
+          Mail.new(
+            to:      'test@sendgrid.com',
+            from:    'taco@cat.limo',
+            subject: 'Hello, world!',
+            delivery_method_options: {
+              api_key: 'test_key'
+            }
+          )
+        end
+
+        it 'sets api_key' do
+          expect(SendGrid::API).to receive(:new).with(api_key: 'test_key')
+          mailer.deliver!(mail)
+        end
       end
 
       it 'sets to' do

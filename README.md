@@ -24,6 +24,20 @@ Normal ActionMailer usage will now transparently be sent using SendGrid's Web AP
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body')```
 
+### Dynamic API Key
+
+If you need to send mail for a number of Sendgrid accounts, you can set the API key for these as follows:
+
+
+```ruby
+mail(to: 'example@email.com',
+     subject: 'email subject',
+     body: 'email body',
+     delivery_method_options: {
+       api_key: 'SENDGRID_API_KEY'
+     })
+```
+
 ## SendGrid Mail Extensions
 
 The Mail functionality is extended to include additional attributes provided by the Sendgrid API.
