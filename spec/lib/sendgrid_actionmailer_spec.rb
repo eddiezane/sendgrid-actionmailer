@@ -352,9 +352,13 @@ module SendGridActionMailer
           end
         end
 
-        # TBD if the official gem has this feature released
-        context 'dynamic template data' do
-
+        context 'dynamic template data', :focus do
+          it 'sets dynamic_template_data' do
+            template_data = { 'variable_1' => '1', 'variable_2' => '2' }
+            mail['dynamic_template_data'] = template_data
+            mailer.deliver!(mail)
+            expect(client.sent_mail['dynamic_template_data']).to eq(template_data)
+          end
         end
       end
 
