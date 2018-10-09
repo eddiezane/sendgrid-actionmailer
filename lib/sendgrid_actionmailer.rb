@@ -13,20 +13,13 @@ module SendGridActionMailer
       raise_delivery_errors: false
     }.freeze
 
-    attr_accessor :settings
-    attr_reader :api_key
+    attr_accessor :settings, :api_key
 
     def initialize(**params)
       self.settings = DEFAULTS.merge(params)
     end
 
     def deliver!(mail)
-      @api_key = nil
-
-      api_key_header_field = mail.header_fields.find do |field|
-        field.name.eql?('delivery-method-options') && field.value.include?('api_key')
-      end
-
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.from)
         m.reply_to = to_email(mail.reply_to)
@@ -35,11 +28,7 @@ module SendGridActionMailer
         m.add_personalization(to_personalizations(mail))
       end
 
-      if api_key_header_field
-        # Pull SendGrid API Key from delivery_method_options
-        @api_key = JSON.parse(api_key_header_field.value.gsub('=>', ':'))['api_key']
-      end
-
+      add_api_key(sendgrid_mail, mail)
       add_content(sendgrid_mail, mail)
       add_send_options(sendgrid_mail, mail)
       add_mail_settings(sendgrid_mail, mail)
@@ -53,9 +42,7 @@ module SendGridActionMailer
     private
 
     def client
-      key = @api_key || settings.fetch(:api_key)
-
-      @client ||= SendGrid::API.new(api_key: key).client
+      @client = SendGrid::API.new(api_key: api_key).client
     end
 
     # type should be either :plain or :html
@@ -117,6 +104,13 @@ module SendGridActionMailer
       content_disp = message.header[:content_disposition]
       return unless content_disp.respond_to?(:disposition_type)
       content_disp.disposition_type
+    end
+
+    def add_api_key(sendgrid_mail, mail)
+      self.api_key = settings.fetch(:api_key)
+      if mail['delivery-method-options'] && mail['delivery-method-options'].value.include?('api_key')
+        self.api_key = JSON.parse(mail['delivery-method-options'].value.gsub('=>', ':'))['api_key']
+      end
     end
 
     def add_content(sendgrid_mail, mail)
