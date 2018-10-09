@@ -17,7 +17,6 @@ module SendGridActionMailer
 
     def initialize(**params)
       self.settings = DEFAULTS.merge(params)
-      self.api_key = nil
     end
 
     def deliver!(mail)
@@ -29,7 +28,7 @@ module SendGridActionMailer
         m.add_personalization(to_personalizations(mail))
       end
 
-      add_api_key(sendgrid_mail,mail)
+      add_api_key(sendgrid_mail, mail)
       add_content(sendgrid_mail, mail)
       add_send_options(sendgrid_mail, mail)
       add_mail_settings(sendgrid_mail, mail)
@@ -43,8 +42,7 @@ module SendGridActionMailer
     private
 
     def client
-      key = api_key || settings.fetch(:api_key)
-      @client = SendGrid::API.new(api_key: key).client
+      @client = SendGrid::API.new(api_key: api_key).client
     end
 
     # type should be either :plain or :html
@@ -109,6 +107,7 @@ module SendGridActionMailer
     end
 
     def add_api_key(sendgrid_mail, mail)
+      self.api_key = settings.fetch(:api_key)
       if mail['delivery-method-options'] && mail['delivery-method-options'].value.include?('api_key')
         self.api_key = JSON.parse(mail['delivery-method-options'].value.gsub('=>', ':'))['api_key']
       end
