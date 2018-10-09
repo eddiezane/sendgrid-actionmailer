@@ -77,6 +77,14 @@ module SendGridActionMailer
       end
 
       context 'with dynamic api_key' do
+        let(:default) do
+          Mail.new(
+            to:      'test@sendgrid.com',
+            from:    'taco@cat.limo',
+            subject: 'Hello, world!'
+          )
+        end
+
         let(:mail) do
           Mail.new(
             to:      'test@sendgrid.com',
@@ -88,9 +96,13 @@ module SendGridActionMailer
           )
         end
 
-        it 'sets api_key' do
+        it 'sets dynamic api_key, but should revert to default settings api_key' do
+          expect(SendGrid::API).to receive(:new).with(api_key: 'key')
+          mailer.deliver!(default)
           expect(SendGrid::API).to receive(:new).with(api_key: 'test_key')
           mailer.deliver!(mail)
+          expect(SendGrid::API).to receive(:new).with(api_key: 'key')
+          mailer.deliver!(default)
         end
       end
 
