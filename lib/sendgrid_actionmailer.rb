@@ -55,7 +55,7 @@ module SendGridActionMailer
     def client
       key = @api_key || settings.fetch(:api_key)
 
-      @client ||= SendGrid::API.new(api_key: key).client
+      @client = SendGrid::API.new(api_key: key).client
     end
 
     # type should be either :plain or :html
