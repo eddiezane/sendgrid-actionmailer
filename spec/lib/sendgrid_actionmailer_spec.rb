@@ -352,12 +352,12 @@ module SendGridActionMailer
           end
         end
 
-        context 'dynamic template data', :focus do
+        context 'dynamic template data' do
           it 'sets dynamic_template_data' do
-            template_data = { 'variable_1' => '1', 'variable_2' => '2' }
+            template_data = { variable_1: '1', variable_2: '2' }
             mail['dynamic_template_data'] = template_data
             mailer.deliver!(mail)
-            expect(client.sent_mail['dynamic_template_data']).to eq(template_data)
+            expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq(template_data)
           end
         end
       end
