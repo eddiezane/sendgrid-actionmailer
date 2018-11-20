@@ -452,7 +452,7 @@ module SendGridActionMailer
         end
 
         it 'adds the attachment' do
-          expect(mail.attachments.first.read).to eq(File.read(__FILE__))
+          expect(mail.attachments.first.read).to include("it 'adds the attachment' do")
           mailer.deliver!(mail)
           attachment = client.sent_mail['attachments'].first
           expect(attachment['filename']).to eq('specs.rb')
@@ -489,7 +489,7 @@ module SendGridActionMailer
         end
 
         it 'adds the inline attachment' do
-          expect(mail.attachments.first.read).to eq(File.read(__FILE__))
+          expect(mail.attachments.first.read).to include("it 'adds the inline attachment' do")
           mailer.deliver!(mail)
           content = client.sent_mail['attachments'].first
           expect(content['filename']).to eq('specs.rb')
