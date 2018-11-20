@@ -6,7 +6,7 @@ An ActionMailer adapter to send email using SendGrid's HTTPS Web API (instead of
 
 Add this line to your application's Gemfile:
 
-    gem 'sendgrid-actionmailer', github: 'eddiezane/sendgrid-actionmailer'
+    gem 'sendgrid-actionmailer'
 
 ## Usage
 
@@ -23,6 +23,20 @@ config.action_mailer.sendgrid_actionmailer_settings = {
 Normal ActionMailer usage will now transparently be sent using SendGrid's Web API.
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body')```
+
+### Dynamic API Key
+
+If you need to send mail for a number of Sendgrid accounts, you can set the API key for these as follows:
+
+
+```ruby
+mail(to: 'example@email.com',
+     subject: 'email subject',
+     body: 'email body',
+     delivery_method_options: {
+       api_key: 'SENDGRID_API_KEY'
+     })
+```
 
 ## SendGrid Mail Extensions
 
