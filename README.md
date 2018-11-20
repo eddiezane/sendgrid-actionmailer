@@ -215,6 +215,12 @@ The name of the campaign.
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  tracking_settings:{ enable: true, utm_source: 'some source', utm_medium: 'some medium', utm_term: 'some term', utm_content: 'some content', utm_campaign: 'some campaign' }})```
 
+### dynamic_template_data (json)
+
+Data to provide for feeding the new dynamic templates in Sendgrid with valueable data. This also disables the following Unsubscribe links because of deprecation of substitutions in the new template implementaiton.
+
+```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  dynamic_template_data:{ variable_1: 'foo', variable_2: 'bar'})```
+
 ### Unsubscribe Links
 
 Sendgrid unfortunately uses <% %> for their default substitution syntax, which makes it incompatible with Rails templates. Their proposed solution is to use Personalization Substitutions with the v3 Mail Send Endpoint.  This gem makes that modification to make the following Rails friendly unsubscribe urls.
