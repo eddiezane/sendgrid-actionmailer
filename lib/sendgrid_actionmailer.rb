@@ -23,7 +23,7 @@ module SendGridActionMailer
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.from)
         m.reply_to = to_email(mail.reply_to)
-        m.subject = mail.subject
+        m.subject = mail.subject || ""
         # https://sendgrid.com/docs/Classroom/Send/v3_Mail_Send/personalizations.html
         m.add_personalization(to_personalizations(mail))
       end
@@ -83,10 +83,11 @@ module SendGridActionMailer
 
         if mail['dynamic_template_data']
           p.add_dynamic_template_data(json_parse(mail['dynamic_template_data'].value))
+        else
+          p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
+          p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
+          p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
         end
-        p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
-        p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
-        p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
       end
     end
 
