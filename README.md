@@ -228,3 +228,5 @@ Sendgrid unfortunately uses <% %> for their default substitution syntax, which m
  * `<a href="%asm_group_unsubscribe_raw_url%">Unsubscribe</a>`
  * `<a href="%asm_global_unsubscribe_raw_url%">Unsubscribe from List</a>`
  * `<a href="%asm_preferences_raw_url%">Manage Email Preferences</a>`
+
+Note: This feature, and substitutions in general, do not work in combination with dynamic templates.
