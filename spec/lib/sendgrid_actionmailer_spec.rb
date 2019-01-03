@@ -393,6 +393,12 @@ module SendGridActionMailer
             expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq(template_data)
           end
         end
+
+        it 'sets dynamic template data and sandbox_mode' do
+          mail['mail_settings'] = '{}'
+          mailer.deliver!(mail)
+          expect(client.sent_mail['mail_settings']).to eq(nil)
+        end
       end
 
       context 'multipart/alternative' do
