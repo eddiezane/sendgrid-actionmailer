@@ -83,7 +83,7 @@ module SendGridActionMailer
 
         if mail['dynamic_template_data']
           p.add_dynamic_template_data(json_parse(mail['dynamic_template_data'].value))
-        else
+        elsif mail['template_id'].nil?
           p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
           p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
           p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
