@@ -163,9 +163,11 @@ module SendGridActionMailer
           sendgrid_mail.add_custom_arg(CustomArg.new(key: key, value: value))
         end
       end
-      if mail['send_at'] && mail['batch_id']
+      if mail['send_at']
         sendgrid_mail.send_at = mail['send_at'].value.to_i
-        sendgrid_mail.batch_id= mail['batch_id'].to_s
+      end
+      if mail['batch_id']
+        sendgrid_mail.batch_id = mail['batch_id'].to_s
       end
       if mail['asm']
         asm = json_parse(mail['asm'].value)
