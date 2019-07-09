@@ -1,5 +1,12 @@
 # Change Log
 
+## 2.4.0 - 2019-07-9
+
+### Changed
+
+- Compatibility with `sendgrid-ruby` v6.0.
+
+
 ## 2.0.0 - 2018-08-15
 
 ### Changed
