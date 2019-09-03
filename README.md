@@ -217,7 +217,7 @@ The name of the campaign.
 
 ### dynamic_template_data (json)
 
-Data to provide for feeding the new dynamic templates in Sendgrid with valueable data. This also disables the following Unsubscribe links because of deprecation of substitutions in the new template implementaiton.
+Data to provide for feeding the new dynamic templates in Sendgrid with valueable data. This also disables the following Unsubscribe links because of deprecation of substitutions in the new template implementaiton.  Variables are available within templates using [{{handlebar syntax}}](https://sendgrid.com/docs/for-developers/sending-email/using-handlebars).
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  dynamic_template_data:{ variable_1: 'foo', variable_2: 'bar'})```
 
