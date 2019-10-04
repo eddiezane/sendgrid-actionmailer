@@ -2,6 +2,6 @@
 
 source "https://rubygems.org"
 
-gem "mail", "2.5.4"
+gem "mail", "2.5.5"
 
 gemspec :path => "../"
