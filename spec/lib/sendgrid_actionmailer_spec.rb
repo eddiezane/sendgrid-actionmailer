@@ -3,6 +3,14 @@ require 'webmock/rspec'
 
 module SendGridActionMailer
   describe DeliveryMethod do
+    def stringify_keys(hash)
+      result = {}
+      hash.each_key do |key|
+        result[key.to_s] = hash[key]
+      end
+      result
+    end
+
     subject(:mailer) do
       DeliveryMethod.new(api_key: 'key')
     end
@@ -540,6 +548,179 @@ module SendGridActionMailer
           expect(content['filename']).to eq('specs.rb')
           expect(content['type']).to eq('application/x-ruby')
           expect(content['content_id'].class).to eq(String)
+        end
+      end
+
+      context 'with personalizations' do
+        let(:personalizations) do
+          [
+            {
+              'to' => [
+                {'email' => 'john1@example.com', 'name' => 'John 1'},
+                {'email' => 'john2@example.com', 'name' =>  'John 2'},
+              ]
+            },
+            {
+              'to' => [
+                {'email' => 'john3@example.com', 'name' => 'John 3'},
+                {'email' => 'john4@example.com'}
+              ],
+              'cc' => [
+                {'email' => 'cc@example.com'}
+              ],
+              'bcc' => [
+                {'email' => 'bcc@example.com'}
+              ],
+              'substitutions' => {
+                '%fname%' => 'Bob'
+              },
+              'subject' => 'personalized subject',
+              'send_at' => 1443636843,
+              'custom_args' => {
+                'user_id' => '343'
+              },
+              'headers' => {
+                'X-Test' => true
+              }
+            }
+          ]
+        end
+
+        before do
+          mail.to = nil
+          mail.cc = nil
+          mail.bcc = nil
+          mail['personalizations'] = personalizations
+        end
+
+
+        it 'sets the provided to address personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'].length).to eq(2)
+          expect(client.sent_mail['personalizations'][0]['to']).to eq(personalizations[0]['to'])
+          expect(client.sent_mail['personalizations'][1]['to']).to eq(personalizations[1]['to'])
+        end
+
+        it 'sets the provided cc address personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('cc')
+          expect(client.sent_mail['personalizations'][1]['cc']).to eq(personalizations[1]['cc'])
+        end
+
+        it 'sets the provided bcc address personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('bcc')
+          expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[1]['bcc'])
+        end
+
+        it 'sets the provided subject personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('subject')
+          expect(client.sent_mail['personalizations'][1]['subject']).to eq(personalizations[1]['subject'])
+        end
+
+        it 'sets the provided headers personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('headers')
+          expect(client.sent_mail['personalizations'][1]['headers']).to eq(personalizations[1]['headers'])
+        end
+
+        it 'sets the provided custom_arg personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('custom_args')
+          expect(client.sent_mail['personalizations'][1]['custom_args']).to eq(personalizations[1]['custom_args'])
+        end
+
+        it 'sets the provided send_at personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]).to_not have_key('send_at')
+          expect(client.sent_mail['personalizations'][1]['send_at']).to eq(personalizations[1]['send_at'])
+        end
+
+        it 'sets the provided substitution personalizations' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][1]['substitutions']).to include(personalizations[1]['substitutions'])
+        end
+
+        it 'adds to the unsubscribe link substitutions' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'][0]['substitutions']).to eq({
+            '%asm_group_unsubscribe_raw_url%' => '<%asm_group_unsubscribe_raw_url%>',
+            '%asm_global_unsubscribe_raw_url%' => '<%asm_global_unsubscribe_raw_url%>',
+            '%asm_preferences_raw_url%' => '<%asm_preferences_raw_url%>'
+          })
+          expect(client.sent_mail['personalizations'][1]['substitutions']).to include(personalizations[1]['substitutions'])
+          expect(client.sent_mail['personalizations'][1]['substitutions']).to include({
+            '%asm_group_unsubscribe_raw_url%' => '<%asm_group_unsubscribe_raw_url%>',
+            '%asm_global_unsubscribe_raw_url%' => '<%asm_global_unsubscribe_raw_url%>',
+            '%asm_preferences_raw_url%' => '<%asm_preferences_raw_url%>'
+          })
+        end
+
+        context 'with symbols used as keys' do
+          let(:personalizations) do
+            [
+              {
+                to: [
+                  {email: 'john1@example.com', name: 'John 1'}
+                ]
+              }
+            ]
+          end
+
+          it 'still works' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'].length).to eq(1)
+            expected_to = personalizations[0][:to].map { |t| stringify_keys(t) }
+            expect(client.sent_mail['personalizations'][0]['to']).to eq(expected_to)
+          end
+        end
+
+        context 'when to is set on mail object' do
+          before { mail.to = 'test@sendgrid.com' }
+
+          it 'adds that to address on all personalizations' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'].length).to eq(2)
+            expect(client.sent_mail['personalizations'][0]['to']).to match_array(
+              [{"email"=>"test@sendgrid.com"}] + personalizations[0]['to']
+            )
+            expect(client.sent_mail['personalizations'][1]['to']).to match_array(
+              [{"email"=>"test@sendgrid.com"}] + personalizations[1]['to']
+            )
+          end
+        end
+
+        context 'when cc is set on mail object' do
+          before { mail.cc = 'test@sendgrid.com' }
+
+          it 'adds that cc address on all personalizations' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'].length).to eq(2)
+            expect(client.sent_mail['personalizations'][0]['to']).to eq(personalizations[0]['to'])
+            expect(client.sent_mail['personalizations'][0]['cc']).to eq(
+              [{"email"=>"test@sendgrid.com"}]
+            )
+            expect(client.sent_mail['personalizations'][1]['cc']).to match_array(
+              [{"email"=>"test@sendgrid.com"}] + personalizations[1]['cc']
+            )
+          end
+        end
+
+        context 'when bcc is set on mail object' do
+          before { mail.bcc = 'test@sendgrid.com' }
+
+          it 'adds that bcc address on all personalizations' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'].length).to eq(2)
+            expect(client.sent_mail['personalizations'][0]['to']).to eq(personalizations[0]['to'])
+            expect(client.sent_mail['personalizations'][0]['bcc']).to eq(
+              [{"email"=>"test@sendgrid.com"}]
+            )
+            expect(client.sent_mail['personalizations'][1]['bcc']).to match_array(
+              [{"email"=>"test@sendgrid.com"}] + personalizations[1]['bcc']
+            )
+          end
         end
       end
     end
