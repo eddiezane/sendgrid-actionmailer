@@ -242,12 +242,36 @@ module SendGridActionMailer
         ])
       end
 
-      context 'send options' do
-        it 'sets a template_id' do
+      context 'template_id' do
+        before do
           mail['template_id'] = '1'
+        end
+
+        it 'sets a template_id' do
           mailer.deliver!(mail)
           expect(client.sent_mail['template_id']).to eq('1')
         end
+
+        it 'does not set unsubscribe substitutions' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'].first).to_not have_key('substitutions')
+        end
+      end
+
+      context 'without dynamic template data or a template id' do
+        it 'sets unsubscribe substitutions' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['personalizations'].first).to have_key('substitutions')
+          substitutions = client.sent_mail['personalizations'].first['substitutions']
+          expect(substitutions).to eq({
+            '%asm_group_unsubscribe_raw_url%' => '<%asm_group_unsubscribe_raw_url%>',
+            '%asm_global_unsubscribe_raw_url%' => '<%asm_global_unsubscribe_raw_url%>',
+            '%asm_preferences_raw_url%' => '<%asm_preferences_raw_url%>'
+          })
+        end
+      end
+
+      context 'send options' do
 
         it 'sets sections' do
           mail['sections'] = {'%foo%' => 'bar'}
@@ -386,11 +410,20 @@ module SendGridActionMailer
         end
 
         context 'dynamic template data' do
+          let(:template_data) do
+            { variable_1: '1', variable_2: '2' }
+          end
+          
+          before { mail['dynamic_template_data'] = template_data }
+
           it 'sets dynamic_template_data' do
-            template_data = { variable_1: '1', variable_2: '2' }
-            mail['dynamic_template_data'] = template_data
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq(template_data)
+          end
+
+          it 'does not set unsubscribe substitutions' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'].first).to_not have_key('substitutions')
           end
         end
 
