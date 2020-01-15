@@ -234,7 +234,7 @@ The personalizations object supports:
 - "custom_args" - Any custom arguments you would like to include in your email.
 - "send_at" - A specific time that you would like your email to be sent.
 
-Note that if you set a to, cc, or bcc on the mail object, this will be added to each personalized email. Other fields set in the personalizations object will override any global paramters defined outside of personalizations.
+Note that if you set a to, cc, or bcc on the mail object, this will be inserted as its own personalization separate from any you specify. Other fields set in the personalizations object will override any global parameters defined outside of personalizations.
 
 Also note that substitutions will not work with dynamic templates.
 
