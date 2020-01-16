@@ -233,10 +233,16 @@ The personalizations object supports:
 - "substitutions" - Any substitutions you would like to be made for your email.
 - "custom_args" - Any custom arguments you would like to include in your email.
 - "send_at" - A specific time that you would like your email to be sent.
+- "dynamic_template_data" - data for dynamic templates.
 
-Note that if you set a to, cc, or bcc on the mail object, this will be inserted as its own personalization separate from any you specify. Other fields set in the personalizations object will override any global parameters defined outside of personalizations.
+The following should be noted about these personalization attributes:
+- to, cc, or bcc: if either to, cc, or bcc is also set when calling mail, those addresses provided to mail will be inserted as a separate personalization from the ones you provide. However, when using personalizations, you are not required to specify `to` when calling the mail function.
+- dynamic_template_data specified in the mail function will be merged with any dynamic_template_data specified in the personalizations object (with the personalizations object keys having priority).
+- Other fields set in the personalizations object will override any global parameters defined outside of personalizations.
 
 Also note that substitutions will not work with dynamic templates.
+
+Example usage:
 
 ```
 mail(subject: 'default subject', 'email body', personalizations: [
