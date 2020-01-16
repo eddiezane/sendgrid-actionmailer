@@ -426,7 +426,7 @@ module SendGridActionMailer
 
           it 'sets dynamic_template_data' do
             mailer.deliver!(mail)
-            expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq(template_data)
+            expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq({'variable_1' => '1', 'variable_2' => '2'})
           end
 
           it 'does not set unsubscribe substitutions' do
@@ -671,6 +671,51 @@ module SendGridActionMailer
             expect(client.sent_mail['personalizations'].length).to eq(1)
             expected_to = personalizations[0][:to].map { |t| stringify_keys(t) }
             expect(client.sent_mail['personalizations'][0]['to']).to eq(expected_to)
+          end
+        end
+
+        context 'dynamic template data passed into a personalizaiton' do
+          let(:personalization_data) do
+            {
+              'variable_1' => '1', 'variable_2' => '2'
+            }
+          end
+
+          let(:personalizations_with_dynamic_data) do
+            personalizations.tap do |p|
+              p[1]['dynamic_template_data'] = personalization_data
+            end
+          end
+
+          before do
+            mail['personalizations'] = nil
+            mail['personalizations'] = personalizations_with_dynamic_data
+          end
+
+          it 'sets the provided dynamic template data personalizations' do
+            mailer.deliver!(mail)
+            expect(client.sent_mail['personalizations'][0]).to_not have_key('dynamic_template_data')
+            expect(client.sent_mail['personalizations'][1]['dynamic_template_data']).to eq(personalization_data)
+          end
+
+          context 'dynamic template data is also set on the mail object' do
+            let(:mail_template_data) do
+              { 'variable_3' => '1', 'variable_4' => '2' }
+            end
+
+            before { mail['dynamic_template_data'] = mail_template_data }
+
+            it 'sets dynamic_template_data where not also provided as a personalization' do
+              mailer.deliver!(mail)
+              expect(client.sent_mail['personalizations'][0]['dynamic_template_data']).to eq(mail_template_data)
+            end
+
+            it 'merges the template data with a personalizations dynamic data' do
+              mailer.deliver!(mail)
+              expect(client.sent_mail['personalizations'][1]['dynamic_template_data']).to eq(
+                mail_template_data.merge(personalization_data)
+              )
+            end
           end
         end
 

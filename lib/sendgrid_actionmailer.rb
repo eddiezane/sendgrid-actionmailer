@@ -33,7 +33,6 @@ module SendGridActionMailer
       add_mail_settings(sendgrid_mail, mail)
       add_tracking_settings(sendgrid_mail, mail)
 
-
       response = perform_send_request(sendgrid_mail)
 
       settings[:return_response] ? response : self
@@ -102,8 +101,14 @@ module SendGridActionMailer
         p.subject = personalization_hash['subject']
       end
 
-      if mail['dynamic_template_data']
-        p.add_dynamic_template_data(json_parse(mail['dynamic_template_data'].value))
+      if mail['dynamic_template_data'] || personalization_hash['dynamic_template_data']
+        if mail['dynamic_template_data']
+          data = json_parse(mail['dynamic_template_data'].value, false)
+          data.merge!(personalization_hash['dynamic_template_data'] || {})
+        else
+          data = personalization_hash['dynamic_template_data']
+        end
+        p.add_dynamic_template_data(data)
       elsif mail['template_id'].nil?
         p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
         p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
