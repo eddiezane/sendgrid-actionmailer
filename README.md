@@ -221,6 +221,38 @@ Data to provide for feeding the new dynamic templates in Sendgrid with valueable
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body',  dynamic_template_data:{ variable_1: 'foo', variable_2: 'bar'})```
 
+### personalizations (json)
+
+Allows providing a customized [personalizations](https://sendgrid.com/docs/for-developers/sending-email/personalizations/) array for the v3 Mail Send endpoint. This allows customizing how an email is sent and also allows sending multiple different emails to different recipients with a single API call.
+
+The personalizations object supports:
+
+- "to", "cc", "bcc" - The recipients of your email.
+- "subject" - The subject of your email.
+- "headers" - Any headers you would like to include in your email.
+- "substitutions" - Any substitutions you would like to be made for your email.
+- "custom_args" - Any custom arguments you would like to include in your email.
+- "send_at" - A specific time that you would like your email to be sent.
+- "dynamic_template_data" - data for dynamic templates.
+
+The following should be noted about these personalization attributes:
+- to, cc, or bcc: if either to, cc, or bcc is also set when calling mail, those addresses provided to mail will be inserted as a separate personalization from the ones you provide. However, when using personalizations, you are not required to specify `to` when calling the mail function.
+- dynamic_template_data specified in the mail function will be merged with any dynamic_template_data specified in the personalizations object (with the personalizations object keys having priority).
+- Other fields set in the personalizations object will override any global parameters defined outside of personalizations.
+
+Also note that substitutions will not work with dynamic templates.
+
+Example usage:
+
+```
+mail(subject: 'default subject', 'email body', personalizations: [
+  { to: { email: 'example@example.com' }},
+  { to: { email: 'example2@example.com' }}
+])
+
+```
+
+
 ### Unsubscribe Links
 
 Sendgrid unfortunately uses <% %> for their default substitution syntax, which makes it incompatible with Rails templates. Their proposed solution is to use Personalization Substitutions with the v3 Mail Send Endpoint.  This gem makes that modification to make the following Rails friendly unsubscribe urls.
