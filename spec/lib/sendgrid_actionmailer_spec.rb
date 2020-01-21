@@ -362,6 +362,13 @@ module SendGridActionMailer
             mailer.deliver!(mail)
             expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
           end
+
+          it 'should not change values inside custom args' do
+            custom_args = { 'text' => 'line with a => in it' }
+            mail['custom_args'] = custom_args
+            mailer.deliver!(mail)
+            expect(client.sent_mail['custom_args']).to eq('text' => 'line with a => in it')
+          end
         end
 
         context 'mail_settings' do
@@ -446,6 +453,19 @@ module SendGridActionMailer
           it 'does not set unsubscribe substitutions' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].first).to_not have_key('substitutions')
+          end
+
+          context 'containing what looks like hash syntax' do
+            let(:template_data) do
+              { hint: 'Just use => instead of :' }
+            end
+
+            it 'does not change values inside dynamic template data' do
+              mailer.deliver!(mail)
+              expect(
+                client.sent_mail['personalizations'].first['dynamic_template_data']
+              ).to eq('hint' => 'Just use => instead of :')
+            end
           end
         end
 
