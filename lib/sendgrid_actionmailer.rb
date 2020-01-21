@@ -173,6 +173,9 @@ module SendGridActionMailer
     end
 
     def json_parse(text, symbolize=true)
+      if text.is_a?(::Mail::Field)
+        return text.unparsed_value if text.unparsed_value.is_a?(Hash)
+      end
       return {} if text.empty?
 
       text = text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }
