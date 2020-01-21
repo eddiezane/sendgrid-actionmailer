@@ -316,6 +316,13 @@ module SendGridActionMailer
             mailer.deliver!(mail)
             expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
           end
+
+          it "should not mess up contents" do
+            custom_args = {"text" => "line with a => in it"}
+            mail["custom_args"] = custom_args
+            mailer.deliver!(mail)
+            expect(client.sent_mail['custom_args']).to eq({"text" => "line with a => in it"})
+          end
         end
 
         context 'mail_settings' do
