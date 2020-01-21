@@ -173,8 +173,13 @@ module SendGridActionMailer
     end
 
     def json_parse(text, symbolize=true)
-      if text.is_a?(::Mail::Field)
-        return text.unparsed_value if text.unparsed_value.is_a?(Hash)
+      if text.is_a?(::Mail::Field) && text.unparsed_value.is_a?(Hash)
+        value = text.unparsed_value
+        if symbolize
+          return value.transform_keys(&:to_sym)
+        else
+          return value.transform_keys(&:to_s)
+        end
       end
       return {} if text.empty?
 
