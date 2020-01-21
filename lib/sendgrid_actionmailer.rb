@@ -136,7 +136,10 @@ module SendGridActionMailer
     end
 
     def json_parse(text, symbolize=true)
-      JSON.parse(text.empty? ? '{}' : text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: symbolize)
+      return {} if text.empty?
+
+      text = text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }
+      JSON.parse(text, symbolize_names: symbolize)
     end
 
     def add_send_options(sendgrid_mail, mail)
