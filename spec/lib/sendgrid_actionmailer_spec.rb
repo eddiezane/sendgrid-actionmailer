@@ -264,6 +264,11 @@ module SendGridActionMailer
           mailer.deliver!(mail)
           expect(client.sent_mail['personalizations'].first).to_not have_key('substitutions')
         end
+
+        it 'does not set send a content type' do
+          mailer.deliver!(mail)
+          expect(client.sent_mail['content']).to eq(nil)
+        end
       end
 
       context 'without dynamic template data or a template id' do
