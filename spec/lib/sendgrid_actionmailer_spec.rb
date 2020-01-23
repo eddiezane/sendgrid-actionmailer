@@ -269,6 +269,15 @@ module SendGridActionMailer
           mailer.deliver!(mail)
           expect(client.sent_mail['content']).to eq(nil)
         end
+
+        it 'does not set send a content type even if body is given' do
+          # This matches the default behavior of ActionMail. body must be
+          # specified and content_type defaults to text/plain.
+          mail.body = 'I heard you like pineapple.'
+          mail.content_type = 'text/plain'
+          mailer.deliver!(mail)
+          expect(client.sent_mail['content']).to eq(nil)
+        end
       end
 
       context 'without dynamic template data or a template id' do
