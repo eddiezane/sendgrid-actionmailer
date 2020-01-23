@@ -146,18 +146,28 @@ module SendGridActionMailer
       end
     end
 
-    def add_content(sendgrid_mail, mail)
-      case mail.mime_type
-      when 'text/plain'
-        sendgrid_mail.add_content(to_content(:plain, mail.body.decoded))
-      when 'text/html'
-        sendgrid_mail.add_content(to_content(:html, mail.body.decoded))
-      when 'multipart/alternative', 'multipart/mixed', 'multipart/related'
-        sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if mail.text_part
-        sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if mail.html_part
+    def add_attachments(sendgrid_mail, mail)
+      mail.attachments.each do |part|
+        sendgrid_mail.add_attachment(to_attachment(part))
+      end
+    end
 
-        mail.attachments.each do |part|
-          sendgrid_mail.add_attachment(to_attachment(part))
+    def add_content(sendgrid_mail, mail)
+      if mail['template_id']
+        # We are sending a template, so we don't need to add any content outside
+        # of attachments
+        add_attachments(sendgrid_mail, mail)
+      else
+        case mail.mime_type
+        when 'text/plain'
+          sendgrid_mail.add_content(to_content(:plain, mail.body.decoded))
+        when 'text/html'
+          sendgrid_mail.add_content(to_content(:html, mail.body.decoded))
+        when 'multipart/alternative', 'multipart/mixed', 'multipart/related'
+          sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if mail.text_part
+          sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if mail.html_part
+
+          add_attachments(sendgrid_mail, mail)
         end
       end
     end
