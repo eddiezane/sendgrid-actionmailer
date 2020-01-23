@@ -128,7 +128,7 @@ module SendGridActionMailer
         a.disposition = disposition unless disposition.nil?
 
         has_content_id = part.header && part.has_content_id?
-        a.content_id = part.header['content_id'].value if has_content_id
+        a.content_id = part.header['content_id'].value.gsub(/\<|\>/, '') if has_content_id
       end
     end
 
@@ -153,8 +153,10 @@ module SendGridActionMailer
       when 'text/html'
         sendgrid_mail.add_content(to_content(:html, mail.body.decoded))
       when 'multipart/alternative', 'multipart/mixed', 'multipart/related'
-        sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if mail.text_part
-        sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if mail.html_part
+        sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if
+            mail.text_part and mail.text_part.body.present?
+        sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if
+            mail.html_part and mail.html_part.body.present?
 
         mail.attachments.each do |part|
           sendgrid_mail.add_attachment(to_attachment(part))
