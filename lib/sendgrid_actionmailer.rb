@@ -146,6 +146,12 @@ module SendGridActionMailer
       end
     end
 
+    def add_attachments(sendgrid_mail, mail)
+      mail.attachments.each do |part|
+        sendgrid_mail.add_attachment(to_attachment(part))
+      end
+    end
+
     def add_content(sendgrid_mail, mail)
       case mail.mime_type
       when 'text/plain'
@@ -156,9 +162,7 @@ module SendGridActionMailer
         sendgrid_mail.add_content(to_content(:plain, mail.text_part.decoded)) if mail.text_part
         sendgrid_mail.add_content(to_content(:html, mail.html_part.decoded)) if mail.html_part
 
-        mail.attachments.each do |part|
-          sendgrid_mail.add_attachment(to_attachment(part))
-        end
+        add_attachments(sendgrid_mail, mail)
       end
     end
 
