@@ -1,5 +1,36 @@
 # Change Log
 
+## 2.6.0 - 2020-1-23
+
+### Chages
+
+- Dont send content types with dynamic templates (#69)
+
+## 2.5.0 - 2020-1-21
+
+### Chages
+
+- Add personalizations field (#60)
+
+### Fixes
+
+- Revert "Lazy load ActionMailer::Base" (#64)
+- Yank 2.4.1
+
+## 2.4.2 - 2020-1-21
+
+### Fixes
+
+- Revert "Lazy load ActionMailer::Base" (#64)
+- Yank 2.4.1
+
+## 2.4.1 - 2020-1-20
+
+### Changed
+
+- Update Travis CI settings to test on latest Ruby and mail gem version (#55)
+- Lazy load ActionMailer::Base (#57)
+
 ## 2.4.0 - 2019-07-9
 
 ### Changed
