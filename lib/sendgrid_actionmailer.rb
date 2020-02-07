@@ -176,9 +176,9 @@ module SendGridActionMailer
       if text.is_a?(::Mail::Field) && text.unparsed_value.is_a?(Hash)
         value = text.unparsed_value
         if symbolize
-          return value.transform_keys(&:to_sym)
+          return transform_keys(value, &:to_sym)
         else
-          return value.transform_keys(&:to_s)
+          return transform_keys(value, &:to_s)
         end
       end
       return {} if text.empty?
@@ -300,6 +300,24 @@ module SendGridActionMailer
       end
 
       result
+    end
+
+    # Returns a new hash with the results of running the block once for every
+    # key. This method does not change the values.
+    #
+    # Hash#transform_keys was introduced in Ruby 2.5. We're reimplementing it
+    # here to maintain backwards compatibility with older Rubies.
+    #
+    # If the method is available on Hash already, we'll use that implementation.
+    def transform_keys(hash, block = Proc.new)
+      return hash.transform_keys do |key|
+        block.call(key)
+      end if hash.respond_to?(:transform_keys)
+
+      hash.map do |key, value|
+        new_key = yield(key)
+        [new_key, value]
+      end.to_h
     end
   end
 end
