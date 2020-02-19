@@ -4,6 +4,7 @@ require 'sendgrid-ruby'
 
 module SendGridActionMailer
   class DeliveryMethod
+
     # TODO: use custom class to customer excpetion payload
     SendgridDeliveryError = Class.new(StandardError)
 
@@ -76,6 +77,8 @@ module SendGridActionMailer
     def setup_personalization(mail, personalization_hash)
       p = Personalization.new
 
+      personalization_hash =  self.class.transform_keys(personalization_hash, &:to_s)
+
       (personalization_hash['to'] || []).each do |to|
         p.add_to Email.new(email: to['email'], name: to['name'])
       end
@@ -103,7 +106,7 @@ module SendGridActionMailer
 
       if mail['dynamic_template_data'] || personalization_hash['dynamic_template_data']
         if mail['dynamic_template_data']
-          data = json_parse(mail['dynamic_template_data'], false)
+          data = mail['dynamic_template_data'].unparsed_value
           data.merge!(personalization_hash['dynamic_template_data'] || {})
         else
           data = personalization_hash['dynamic_template_data']
@@ -142,7 +145,7 @@ module SendGridActionMailer
     def add_api_key(sendgrid_mail, mail)
       self.api_key = settings.fetch(:api_key)
       if mail['delivery-method-options'] && mail['delivery-method-options'].value.include?('api_key')
-        self.api_key = JSON.parse(mail['delivery-method-options'].value.gsub('=>', ':'))['api_key']
+        self.api_key = mail['delivery-method-options'].unparsed_value['api_key']
       end
     end
 
@@ -172,21 +175,6 @@ module SendGridActionMailer
       end
     end
 
-    def json_parse(text, symbolize=true)
-      if text.respond_to?(:unparsed_value) && text.unparsed_value.is_a?(Hash)
-        value = text.unparsed_value
-        if symbolize
-          return transform_keys(value, &:to_sym)
-        else
-          return transform_keys(value, &:to_s)
-        end
-      end
-      return {} if text.empty?
-
-      text = text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }
-      JSON.parse(text, symbolize_names: symbolize)
-    end
-
     def add_personalizations(sendgrid_mail, mail)
       if (mail.to && mail.to.any?) || (mail.cc && mail.cc.any?) || (mail.bcc && mail.bcc.any?)
         personalization = setup_personalization(mail, {})
@@ -197,7 +185,7 @@ module SendGridActionMailer
       end
 
       if mail['personalizations']
-        personalizations = json_parse('[' + mail['personalizations'].value + ']', false)
+        personalizations = mail['personalizations'].respond_to?(:unparsed_value) ? mail['personalizations'].unparsed_value.to_a : mail['personalizations'].map(&:unparsed_value)
         personalizations.each do |p|
           sendgrid_mail.add_personalization(setup_personalization(mail, p))
         end
@@ -209,12 +197,12 @@ module SendGridActionMailer
          sendgrid_mail.template_id = mail['template_id'].to_s
       end
       if mail['sections']
-        json_parse(mail['sections'], false).each do |key, value|
+        mail['sections'].unparsed_value.each do |key, value|
           sendgrid_mail.add_section(Section.new(key: key, value: value))
         end
       end
       if mail['headers']
-        json_parse(mail['headers'], false).each do |key, value|
+        mail['headers'].unparsed_value.each do |key, value|
           sendgrid_mail.add_header(Header.new(key: key, value: value))
         end
       end
@@ -224,7 +212,7 @@ module SendGridActionMailer
         end
       end
       if mail['custom_args']
-        json_parse(mail['custom_args'], false).each do |key, value|
+        mail['custom_args'].unparsed_value.each do |key, value|
           sendgrid_mail.add_custom_arg(CustomArg.new(key: key, value: value))
         end
       end
@@ -235,9 +223,10 @@ module SendGridActionMailer
         sendgrid_mail.batch_id = mail['batch_id'].to_s
       end
       if mail['asm']
-        asm = json_parse(mail['asm'].value)
-        asm =  asm.delete_if { |key, value| !key.to_s.match(/(group_id)|(groups_to_display)/) }
-        if asm[:group_id]
+        asm = mail['asm'].unparsed_value
+        asm =  asm.delete_if { |key, value| 
+          !key.to_s.match(/(group_id)|(groups_to_display)/) }
+        if asm.keys.map(&:to_s).include?('group_id')
           sendgrid_mail.asm = ASM.new(asm)
         end
       end
@@ -248,7 +237,7 @@ module SendGridActionMailer
 
     def add_mail_settings(sendgrid_mail, mail)
       if mail['mail_settings']
-        settings = json_parse(mail['mail_settings'].value)
+        settings = mail['mail_settings'].unparsed_value || {}
         sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
           if settings[:bcc]
             m.bcc = BccSettings.new(settings[:bcc])
@@ -271,7 +260,7 @@ module SendGridActionMailer
 
     def add_tracking_settings(sendgrid_mail, mail)
       if mail['tracking_settings']
-        settings = json_parse(mail['tracking_settings'].value)
+        settings = mail['tracking_settings'].unparsed_value
         sendgrid_mail.tracking_settings = TrackingSettings.new.tap do |t|
           if settings[:click_tracking]
             t.click_tracking = ClickTracking.new(settings[:click_tracking])
@@ -302,22 +291,17 @@ module SendGridActionMailer
       result
     end
 
-    # Returns a new hash with the results of running the block once for every
-    # key. This method does not change the values.
-    #
-    # Hash#transform_keys was introduced in Ruby 2.5. We're reimplementing it
-    # here to maintain backwards compatibility with older Rubies.
-    #
-    # If the method is available on Hash already, we'll use that implementation.
-    def transform_keys(hash, block = Proc.new)
-      return hash.transform_keys do |key|
-        block.call(key)
-      end if hash.respond_to?(:transform_keys)
-
-      hash.map do |key, value|
-        new_key = yield(key)
-        [new_key, value]
-      end.to_h
+    # Recursive key transformation based on Rails deep_transform_values
+    def self.transform_keys(object, &block)
+      #p object
+      case object
+      when Hash
+        object.map { |key, value| [yield(key), transform_keys(value, &block)] }.to_h
+      when Array
+        object.map { |e| transform_keys(e, &block) }
+      else
+        object
+      end
     end
   end
 end
