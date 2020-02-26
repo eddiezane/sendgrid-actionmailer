@@ -75,33 +75,33 @@ module SendGridActionMailer
     end
 
     def setup_personalization(mail, personalization_hash)
-      p = Personalization.new
+      personalization = Personalization.new
 
       personalization_hash =  self.class.transform_keys(personalization_hash, &:to_s)
 
       (personalization_hash['to'] || []).each do |to|
-        p.add_to Email.new(email: to['email'], name: to['name'])
+        personalization.add_to Email.new(email: to['email'], name: to['name'])
       end
       (personalization_hash['cc'] || []).each do |cc|
-        p.add_cc Email.new(email: cc['email'], name: cc['name'])
+        personalization.add_cc Email.new(email: cc['email'], name: cc['name'])
       end
       (personalization_hash['bcc'] || []).each do |bcc|
-        p.add_bcc Email.new(email: bcc['email'], name: bcc['name'])
+        personalization.add_bcc Email.new(email: bcc['email'], name: bcc['name'])
       end
       (personalization_hash['headers'] || []).each do |header_key, header_value|
-        p.add_header Header.new(key: header_key, value: header_value)
+        personalization.add_header Header.new(key: header_key, value: header_value)
       end
       (personalization_hash['substitutions'] || {}).each do |sub_key, sub_value|
-        p.add_substitution(Substitution.new(key: sub_key, value: sub_value))
+        personalization.add_substitution(Substitution.new(key: sub_key, value: sub_value))
       end
       (personalization_hash['custom_args'] || {}).each do |arg_key, arg_value|
-        p.add_custom_arg(CustomArg.new(key: arg_key, value: arg_value))
+        personalization.add_custom_arg(CustomArg.new(key: arg_key, value: arg_value))
       end
       if personalization_hash['send_at']
-        p.send_at = personalization_hash['send_at']
+        personalization.send_at = personalization_hash['send_at']
       end
       if personalization_hash['subject']
-        p.subject = personalization_hash['subject']
+        personalization.subject = personalization_hash['subject']
       end
 
       if mail['dynamic_template_data'] || personalization_hash['dynamic_template_data']
@@ -111,14 +111,14 @@ module SendGridActionMailer
         else
           data = personalization_hash['dynamic_template_data']
         end
-        p.add_dynamic_template_data(data)
+        personalization.add_dynamic_template_data(data)
       elsif mail['template_id'].nil?
-        p.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
-        p.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
-        p.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
+        personalization.add_substitution(Substitution.new(key: "%asm_group_unsubscribe_raw_url%", value: "<%asm_group_unsubscribe_raw_url%>"))
+        personalization.add_substitution(Substitution.new(key: "%asm_global_unsubscribe_raw_url%", value: "<%asm_global_unsubscribe_raw_url%>"))
+        personalization.add_substitution(Substitution.new(key: "%asm_preferences_raw_url%", value: "<%asm_preferences_raw_url%>"))
       end
 
-      p
+      return personalization
     end
 
     def to_attachment(part)
@@ -176,19 +176,17 @@ module SendGridActionMailer
     end
 
     def add_personalizations(sendgrid_mail, mail)
+      if mail['personalizations']
+        mail['personalizations'].unparsed_value.each do |p|
+          sendgrid_mail.add_personalization(setup_personalization(mail, p))
+        end
+      end
       if (mail.to && mail.to.any?) || (mail.cc && mail.cc.any?) || (mail.bcc && mail.bcc.any?)
         personalization = setup_personalization(mail, {})
         to_emails(mail.to).each { |to| personalization.add_to(to) }
         to_emails(mail.cc).each { |cc| personalization.add_cc(cc) }
         to_emails(mail.bcc).each { |bcc| personalization.add_bcc(bcc) }
         sendgrid_mail.add_personalization(personalization)
-      end
-
-      if mail['personalizations']
-        personalizations = mail['personalizations'].respond_to?(:unparsed_value) ? mail['personalizations'].unparsed_value.to_a : mail['personalizations'].map(&:unparsed_value)
-        personalizations.each do |p|
-          sendgrid_mail.add_personalization(setup_personalization(mail, p))
-        end
       end
     end
 
@@ -293,7 +291,6 @@ module SendGridActionMailer
 
     # Recursive key transformation based on Rails deep_transform_values
     def self.transform_keys(object, &block)
-      #p object
       case object
       when Hash
         object.map { |key, value| [yield(key), transform_keys(value, &block)] }.to_h

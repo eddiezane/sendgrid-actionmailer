@@ -727,9 +727,9 @@ module SendGridActionMailer
           it 'adds that to address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['to']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['to']).to eq(personalizations[0]['to'])
-            expect(client.sent_mail['personalizations'][2]['to']).to eq(personalizations[1]['to'])
+            expect(client.sent_mail['personalizations'][0]['to']).to eq(personalizations[0]['to'])
+            expect(client.sent_mail['personalizations'][1]['to']).to eq(personalizations[1]['to'])
+            expect(client.sent_mail['personalizations'][2]['to']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
 
@@ -739,9 +739,9 @@ module SendGridActionMailer
           it 'adds that cc address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['cc']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['cc']).to eq(personalizations[0]['cc'])
-            expect(client.sent_mail['personalizations'][2]['cc']).to eq(personalizations[1]['cc'])
+            expect(client.sent_mail['personalizations'][0]['cc']).to eq(personalizations[0]['cc'])
+            expect(client.sent_mail['personalizations'][1]['cc']).to eq(personalizations[1]['cc'])
+            expect(client.sent_mail['personalizations'][2]['cc']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
 
@@ -751,9 +751,9 @@ module SendGridActionMailer
           it 'adds that bcc address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['bcc']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[0]['bcc'])
-            expect(client.sent_mail['personalizations'][2]['bcc']).to eq(personalizations[1]['bcc'])
+            expect(client.sent_mail['personalizations'][0]['bcc']).to eq(personalizations[0]['bcc'])
+            expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[1]['bcc'])
+            expect(client.sent_mail['personalizations'][2]['bcc']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
       end
