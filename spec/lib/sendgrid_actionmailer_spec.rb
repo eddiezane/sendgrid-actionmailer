@@ -3,12 +3,8 @@ require 'webmock/rspec'
 
 module SendGridActionMailer
   describe DeliveryMethod do
-    def stringify_keys(hash)
-      result = {}
-      hash.each_key do |key|
-        result[key.to_s] = hash[key]
-      end
-      result
+    def transform_keys(object, &block)
+      SendGridActionMailer::DeliveryMethod.transform_keys(object, &block)
     end
 
     subject(:mailer) do
@@ -329,10 +325,10 @@ module SendGridActionMailer
         end
 
         it 'sets asm' do
-          asm = {'group_id' => 99, 'groups_to_display' => [4,5,6,7,8]}
+          asm = {group_id: 99, groups_to_display: [4,5,6,7,8]}
           mail['asm'] = asm
           mailer.deliver!(mail)
-          expect(client.sent_mail['asm']).to eq(asm)
+          expect(client.sent_mail['asm']).to eq(transform_keys(asm, &:to_s))
         end
 
         it 'sets ip_pool_name' do
@@ -341,100 +337,77 @@ module SendGridActionMailer
           expect(client.sent_mail['ip_pool_name']).to eq('marketing')
         end
 
-        context 'parse object' do
-          it "should parse 1.8 hash" do
-            asm = {'group_id' => 99, 'groups_to_display' => [4,5,6,7,8]}
-            mail['asm'] = asm
-            mailer.deliver!(mail)
-            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
-          end
-
-          it "should parse 1.9 hash" do
-            asm = { group_id: 99, groups_to_display: [4,5,6,7,8]}
-            mail['asm'] = asm
-            mailer.deliver!(mail)
-            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
-          end
-
-          it "should parse json" do
-            asm = {'group_id' => 99, 'groups_to_display' => [4,5,6,7,8]}
-            mail['asm'] = asm.to_json
-            mailer.deliver!(mail)
-            expect(client.sent_mail['asm']).to eq({"group_id" => 99, "groups_to_display" => [4,5,6,7,8]})
-          end
-
-          it 'should not change values inside custom args' do
-            custom_args = { 'text' => 'line with a => in it' }
-            mail['custom_args'] = custom_args
-            mailer.deliver!(mail)
-            expect(client.sent_mail['custom_args']).to eq('text' => 'line with a => in it')
-          end
+        it 'should not change values inside custom args' do
+          custom_args = { 'text' => 'line with a => in it' }
+          mail['custom_args'] = custom_args
+          mailer.deliver!(mail)
+          expect(client.sent_mail['custom_args']).to eq('text' => 'line with a => in it')
         end
 
         context 'mail_settings' do
           it 'sets bcc' do
-            bcc = { 'bcc' => { 'enable' => true, 'email' => 'test@example.com' }}
+            bcc = { bcc: { enable: true, email: 'test@example.com' }}
             mail['mail_settings'] = bcc
             mailer.deliver!(mail)
-            expect(client.sent_mail['mail_settings']).to eq(bcc)
+            expect(client.sent_mail['mail_settings']).to eq(transform_keys(bcc, &:to_s))
           end
 
           it 'sets bypass_list_management' do
-            bypass = { 'bypass_list_management' => { 'enable' => true }}
+            bypass = { bypass_list_management: { enable: true }}
             mail['mail_settings'] = bypass
             mailer.deliver!(mail)
-            expect(client.sent_mail['mail_settings']).to eq(bypass)
+            expect(client.sent_mail['mail_settings']).to eq(transform_keys(bypass, &:to_s))
           end
 
           it 'sets footer' do
-            footer = {'footer' => { 'enable' => true, 'text' => 'Footer Text', 'html' => '<html><body>Footer Text</body></html>'}}
+            footer = {footer: { enable: true, text: 'Footer Text', html: '<html><body>Footer Text</body></html>'}}
             mail['mail_settings'] = footer
             mailer.deliver!(mail)
-            expect(client.sent_mail['mail_settings']).to eq(footer)
+            expect(client.sent_mail['mail_settings']).to eq(transform_keys(footer, &:to_s))
           end
 
           it 'sets sandbox_mode' do
-            sandbox = {'sandbox_mode' => { 'enable' => true }}
+            sandbox = {sandbox_mode: { enable: true }}
             mail['mail_settings'] = sandbox
             mailer.deliver!(mail)
-            expect(client.sent_mail['mail_settings']).to eq(sandbox)
+            expect(client.sent_mail['mail_settings']).to eq(transform_keys(sandbox, &:to_s))
           end
 
           it 'sets spam_check' do
-            spam_check = {'spam_check' => { 'enable' => true, 'threshold' => 1, 'post_to_url' => 'https://spamcatcher.sendgrid.com'}}
+            spam_check = {spam_check: { enable: true, threshold: 1, post_to_url: 'https://spamcatcher.sendgrid.com'}}
             mail['mail_settings'] = spam_check
             mailer.deliver!(mail)
-            expect(client.sent_mail['mail_settings']).to eq(spam_check)
+            expect(client.sent_mail['mail_settings']).to eq(transform_keys(spam_check, &:to_s))
           end
         end
 
         context 'tracking_settings' do
           it 'sets click_tracking' do
-            tracking = { 'click_tracking' => { 'enable' => false, 'enable_text' => false }}
-            mail['tracking_settings'] = tracking
+            tracking = { click_tracking: { enable: false, enable_text: false }}
+            mail['tracking_settings'] = tracking.dup
             mailer.deliver!(mail)
-            expect(client.sent_mail['tracking_settings']).to eq(tracking)
+            expect(client.sent_mail['tracking_settings']).to eq(transform_keys(tracking, &:to_s))
           end
 
           it 'sets open_tracking' do
-            tracking = { 'open_tracking' => { 'enable' => true, 'substitution_tag' => 'Optional tag to replace with the open image in the body of the message' }}
+            tracking = { open_tracking: { enable: true, substitution_tag: 'Optional tag to replace with the open image in the body of the message' }}
             mail['tracking_settings'] = tracking
             mailer.deliver!(mail)
-            expect(client.sent_mail['tracking_settings']).to eq(tracking)
+            expect(client.sent_mail['tracking_settings']).to eq(transform_keys(tracking, &:to_s))
           end
 
           it 'sets subscription_tracking' do
-            tracking = { 'subscription_tracking' => { 'enable' => true, 'text' => 'text to insert into the text/plain portion of the message', 'html' => 'html to insert into the text/html portion of the message', 'substitution_tag' => 'Optional tag to replace with the open image in the body of the def message' }}
+            tracking = { subscription_tracking: { enable: true, text: 'text to insert into the text/plain portion of the message', html: 'html to insert into the text/html portion of the message', substitution_tag: 'Optional tag to replace with the open image in the body of the def message' }}
             mail['tracking_settings'] = tracking
             mailer.deliver!(mail)
-            expect(client.sent_mail['tracking_settings']).to eq(tracking)
+            expect(client.sent_mail['tracking_settings']).to eq(transform_keys(tracking, &:to_s))
           end
 
           it 'sets ganalytics' do
-            tracking = { 'ganalytics' => {'enable' => true, 'utm_source' => 'some source', 'utm_medium' => 'some medium', 'utm_term' => 'some term', 'utm_content' => 'some content', 'utm_campaign' => 'some campaign' }}
+            tracking = { ganalytics: { enable: true, utm_source: 'some source', utm_medium: 'some medium', utm_term: 'some term', utm_content: 'some content', utm_campaign: 'some campaign' }}
             mail['tracking_settings'] = tracking
             mailer.deliver!(mail)
-            expect(client.sent_mail['tracking_settings']).to eq(tracking)
+            expect(client.sent_mail['tracking_settings']).to eq(transform_keys(tracking, &:to_s))
           end
         end
 
@@ -447,7 +420,7 @@ module SendGridActionMailer
 
           it 'sets dynamic_template_data' do
             mailer.deliver!(mail)
-            expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq({'variable_1' => '1', 'variable_2' => '2'})
+            expect(client.sent_mail['personalizations'].first['dynamic_template_data']).to eq(template_data)
           end
 
           it 'does not set unsubscribe substitutions' do
@@ -464,15 +437,9 @@ module SendGridActionMailer
               mailer.deliver!(mail)
               expect(
                 client.sent_mail['personalizations'].first['dynamic_template_data']
-              ).to eq('hint' => 'Just use => instead of :')
+              ).to eq(template_data)
             end
           end
-        end
-
-        it 'sets dynamic template data and sandbox_mode' do
-          mail['mail_settings'] = '{}'
-          mailer.deliver!(mail)
-          expect(client.sent_mail['mail_settings']).to eq(nil)
         end
 
         it 'sets dynamic template data and sandbox_mode' do
@@ -690,20 +657,21 @@ module SendGridActionMailer
         end
 
         context 'with symbols used as keys' do
-          let(:personalizations) do
-            [
-              {
-                to: [
-                  { email: 'john1@example.com', name: 'John 1'}
-                ]
-              }
-            ]
+        let(:personalizations) do
+          [
+            {
+              to: [
+                {email: 'sally1@example.com', name: 'Sally 1'},
+                {email: 'sally2@example.com', name: 'Sally 2'},
+              ]
+            }
+          ]
           end
 
           it 'still works' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(1)
-            expected_to = personalizations[0][:to].map { |t| stringify_keys(t) }
+            expected_to = personalizations[0][:to].map { |t| transform_keys(t, &:to_s) }
             expect(client.sent_mail['personalizations'][0]['to']).to eq(expected_to)
           end
         end
@@ -737,7 +705,7 @@ module SendGridActionMailer
               { 'variable_3' => '1', 'variable_4' => '2' }
             end
 
-            before { mail['dynamic_template_data'] = mail_template_data }
+            before { mail['dynamic_template_data'] = mail_template_data.dup }
 
             it 'sets dynamic_template_data where not also provided as a personalization' do
               mailer.deliver!(mail)
@@ -759,9 +727,9 @@ module SendGridActionMailer
           it 'adds that to address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['to']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['to']).to eq(personalizations[0]['to'])
-            expect(client.sent_mail['personalizations'][2]['to']).to eq(personalizations[1]['to'])
+            expect(client.sent_mail['personalizations'][0]['to']).to eq(personalizations[0]['to'])
+            expect(client.sent_mail['personalizations'][1]['to']).to eq(personalizations[1]['to'])
+            expect(client.sent_mail['personalizations'][2]['to']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
 
@@ -771,9 +739,9 @@ module SendGridActionMailer
           it 'adds that cc address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['cc']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['cc']).to eq(personalizations[0]['cc'])
-            expect(client.sent_mail['personalizations'][2]['cc']).to eq(personalizations[1]['cc'])
+            expect(client.sent_mail['personalizations'][0]['cc']).to eq(personalizations[0]['cc'])
+            expect(client.sent_mail['personalizations'][1]['cc']).to eq(personalizations[1]['cc'])
+            expect(client.sent_mail['personalizations'][2]['cc']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
 
@@ -783,9 +751,9 @@ module SendGridActionMailer
           it 'adds that bcc address as a separate personalization' do
             mailer.deliver!(mail)
             expect(client.sent_mail['personalizations'].length).to eq(3)
-            expect(client.sent_mail['personalizations'][0]['bcc']).to eq([{"email"=>"test@sendgrid.com"}])
-            expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[0]['bcc'])
-            expect(client.sent_mail['personalizations'][2]['bcc']).to eq(personalizations[1]['bcc'])
+            expect(client.sent_mail['personalizations'][0]['bcc']).to eq(personalizations[0]['bcc'])
+            expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[1]['bcc'])
+            expect(client.sent_mail['personalizations'][2]['bcc']).to eq([{"email"=>"test@sendgrid.com"}])
           end
         end
       end
