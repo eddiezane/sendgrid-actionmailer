@@ -1,6 +1,6 @@
 # Change Log
 
-## Unreleased
+## 3.0.0 - 2020-3-2
 
 ### Removed
 
