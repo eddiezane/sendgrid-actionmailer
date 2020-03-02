@@ -1,5 +1,11 @@
 # Change Log
 
+## Unreleased
+
+### Removed
+
+- Compatibility with mail gems before version 2.7
+
 ## 2.6.0 - 2020-1-23
 
 ### Chages

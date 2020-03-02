@@ -103,7 +103,7 @@ module SendGridActionMailer
 
       if mail['dynamic_template_data'] || personalization_hash['dynamic_template_data']
         if mail['dynamic_template_data']
-          data = json_parse(mail['dynamic_template_data'].value, false)
+          data = json_parse(mail['dynamic_template_data'], false)
           data.merge!(personalization_hash['dynamic_template_data'] || {})
         else
           data = personalization_hash['dynamic_template_data']
@@ -173,7 +173,18 @@ module SendGridActionMailer
     end
 
     def json_parse(text, symbolize=true)
-      JSON.parse(text.empty? ? '{}' : text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }, symbolize_names: symbolize)
+      if text.respond_to?(:unparsed_value) && text.unparsed_value.is_a?(Hash)
+        value = text.unparsed_value
+        if symbolize
+          return transform_keys(value, &:to_sym)
+        else
+          return transform_keys(value, &:to_s)
+        end
+      end
+      return {} if text.empty?
+
+      text = text.gsub(/:*\"*([\%a-zA-Z0-9_-]*)\"*(( *)=>\ *)/) { "\"#{$1}\":" }
+      JSON.parse(text, symbolize_names: symbolize)
     end
 
     def add_personalizations(sendgrid_mail, mail)
@@ -198,12 +209,12 @@ module SendGridActionMailer
          sendgrid_mail.template_id = mail['template_id'].to_s
       end
       if mail['sections']
-        json_parse(mail['sections'].value, false).each do |key, value|
+        json_parse(mail['sections'], false).each do |key, value|
           sendgrid_mail.add_section(Section.new(key: key, value: value))
         end
       end
       if mail['headers']
-        json_parse(mail['headers'].value, false).each do |key, value|
+        json_parse(mail['headers'], false).each do |key, value|
           sendgrid_mail.add_header(Header.new(key: key, value: value))
         end
       end
@@ -213,7 +224,7 @@ module SendGridActionMailer
         end
       end
       if mail['custom_args']
-        json_parse(mail['custom_args'].value, false).each do |key, value|
+        json_parse(mail['custom_args'], false).each do |key, value|
           sendgrid_mail.add_custom_arg(CustomArg.new(key: key, value: value))
         end
       end
@@ -289,6 +300,24 @@ module SendGridActionMailer
       end
 
       result
+    end
+
+    # Returns a new hash with the results of running the block once for every
+    # key. This method does not change the values.
+    #
+    # Hash#transform_keys was introduced in Ruby 2.5. We're reimplementing it
+    # here to maintain backwards compatibility with older Rubies.
+    #
+    # If the method is available on Hash already, we'll use that implementation.
+    def transform_keys(hash, block = Proc.new)
+      return hash.transform_keys do |key|
+        block.call(key)
+      end if hash.respond_to?(:transform_keys)
+
+      hash.map do |key, value|
+        new_key = yield(key)
+        [new_key, value]
+      end.to_h
     end
   end
 end

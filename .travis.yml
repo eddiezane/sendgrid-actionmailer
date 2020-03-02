@@ -9,6 +9,4 @@ before_install:
   - gem update --system
   - gem install bundler
 gemfile:
-  - gemfiles/mail_2.5.gemfile
-  - gemfiles/mail_2.6.gemfile
   - gemfiles/mail_2.7.gemfile
