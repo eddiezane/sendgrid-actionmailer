@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.1 - 2020-4-3
+
+### Changes
+
+- Validate error response body for empty string
+
 ## 3.0.0 - 2020-3-2
 
 ### Removed
@@ -8,13 +14,13 @@
 
 ## 2.6.0 - 2020-1-23
 
-### Chages
+### Changes
 
 - Dont send content types with dynamic templates (#69)
 
 ## 2.5.0 - 2020-1-21
 
-### Chages
+### Changes
 
 - Add personalizations field (#60)
 
