@@ -248,10 +248,9 @@ Example usage:
 
 ```
 mail(subject: 'default subject', 'email body', personalizations: [
-  { to: { email: 'example@example.com' }},
-  { to: { email: 'example2@example.com' }}
+  { to: [{ email: 'example@example.com' }]},
+  { to: [{ email: 'example2@example.com' }]}
 ])
-
 ```
 
 
