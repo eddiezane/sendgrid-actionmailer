@@ -34,7 +34,11 @@ module SendGridActionMailer
       add_mail_settings(sendgrid_mail, mail)
       add_tracking_settings(sendgrid_mail, mail)
 
-      response = perform_send_request(sendgrid_mail)
+      if (settings[:perform_send_request] == false)
+        response = sendgrid_mail
+      else
+        response = perform_send_request(sendgrid_mail)
+      end
 
       settings[:return_response] ? response : self
     end
