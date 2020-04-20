@@ -229,7 +229,7 @@ module SendGridActionMailer
         asm =  asm.delete_if { |key, value| 
           !key.to_s.match(/(group_id)|(groups_to_display)/) }
         if asm.keys.map(&:to_s).include?('group_id')
-          sendgrid_mail.asm = ASM.new(asm)
+          sendgrid_mail.asm = ASM.new(self.class.transform_keys(asm, &:to_sym))
         end
       end
       if mail['ip_pool_name']
