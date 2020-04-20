@@ -34,7 +34,11 @@ module SendGridActionMailer
       add_mail_settings(sendgrid_mail, mail)
       add_tracking_settings(sendgrid_mail, mail)
 
-      response = perform_send_request(sendgrid_mail)
+      if (settings[:perform_send_request] == false)
+        response = sendgrid_mail
+      else
+        response = perform_send_request(sendgrid_mail)
+      end
 
       settings[:return_response] ? response : self
     end
@@ -225,7 +229,7 @@ module SendGridActionMailer
         asm =  asm.delete_if { |key, value| 
           !key.to_s.match(/(group_id)|(groups_to_display)/) }
         if asm.keys.map(&:to_s).include?('group_id')
-          sendgrid_mail.asm = ASM.new(asm)
+          sendgrid_mail.asm = ASM.new(self.class.transform_keys(asm, &:to_sym))
         end
       end
       if mail['ip_pool_name']

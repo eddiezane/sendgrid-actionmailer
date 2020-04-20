@@ -59,6 +59,11 @@ module SendGridActionMailer
         m = DeliveryMethod.new(return_response: true)
         expect(m.settings[:return_response]).to eq(true)
       end
+
+      it 'sets perform_deliveries' do
+        m = DeliveryMethod.new(perform_send_request: false)
+        expect(m.settings[:perform_send_request]).to eq(false)
+      end
     end
 
     describe '#deliver!' do
@@ -754,6 +759,14 @@ module SendGridActionMailer
             expect(client.sent_mail['personalizations'][0]['bcc']).to eq(personalizations[0]['bcc'])
             expect(client.sent_mail['personalizations'][1]['bcc']).to eq(personalizations[1]['bcc'])
             expect(client.sent_mail['personalizations'][2]['bcc']).to eq([{"email"=>"test@sendgrid.com"}])
+          end
+        end
+
+        context 'when perform_send_request false' do
+          it 'should not send and email and return json body' do
+            m = DeliveryMethod.new(perform_send_request: false, return_response: true, api_key: 'key')
+            response = m.deliver!(mail)
+            expect(response).to respond_to(:to_json)
           end
         end
       end

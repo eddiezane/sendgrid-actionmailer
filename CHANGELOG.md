@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.2 - 2020-4-20
+
+### Changes
+
+- perform_send_request setting for testing perposes
+
 ## 3.0.1 - 2020-4-3
 
 ### Changes

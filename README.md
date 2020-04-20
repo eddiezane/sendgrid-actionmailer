@@ -253,7 +253,6 @@ mail(subject: 'default subject', 'email body', personalizations: [
 ])
 ```
 
-
 ### Unsubscribe Links
 
 Sendgrid unfortunately uses <% %> for their default substitution syntax, which makes it incompatible with Rails templates. Their proposed solution is to use Personalization Substitutions with the v3 Mail Send Endpoint. This gem makes that modification to make the following Rails friendly unsubscribe urls.
@@ -263,3 +262,9 @@ Sendgrid unfortunately uses <% %> for their default substitution syntax, which m
  * `<a href="%asm_preferences_raw_url%">Manage Email Preferences</a>`
 
 Note: This feature, and substitutions in general, do not work in combination with dynamic templates.
+
+## Testing
+
+The setting `perform_send_request` is available to disable sending for testing purposes. Setting perform_send_request false and return_response true enables the testing of the JSON API payload.
+
+
