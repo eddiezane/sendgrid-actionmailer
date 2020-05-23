@@ -308,6 +308,12 @@ module SendGridActionMailer
           expect(client.sent_mail['headers']).to eq({'X-FOO' => 'bar'})
         end
 
+        it 'sets header directly' do
+          mail['X-FOO'] = 'bar'
+          mailer.deliver!(mail)
+          expect(client.sent_mail['headers']).to eq({'X-FOO' => 'bar'})
+        end
+
         it 'sets categories' do
           mail['categories'] = ['foo', 'bar']
           mailer.deliver!(mail)

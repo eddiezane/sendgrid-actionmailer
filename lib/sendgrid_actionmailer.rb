@@ -14,6 +14,10 @@ module SendGridActionMailer
       raise_delivery_errors: false
     }.freeze
 
+    NONHEADERS = ['To', 'From', 'Cc', 'Bcc', 'Reply-To', 'Subject', 'Content-Type', 'delivery-method-options',
+      'template-id', 'categories', 'headers', 'custom-args', 'ip-pool-name', 'mail-settings', 'tracking-settings',
+      'dynamic-template-data', 'personalizations','send-at', 'batch-id', 'asm', 'sections']
+
     attr_accessor :settings, :api_key
 
     def initialize(**params)
@@ -201,6 +205,11 @@ module SendGridActionMailer
       if mail['sections']
         mail['sections'].unparsed_value.each do |key, value|
           sendgrid_mail.add_section(Section.new(key: key, value: value))
+        end
+      end
+      mail.header_fields.map do | field |
+        unless field.name.match(/^(#{NONHEADERS.join('|')})$/)
+          sendgrid_mail.add_header(Header.new(key: field.name, value: field.unparsed_value))
         end
       end
       if mail['headers']
