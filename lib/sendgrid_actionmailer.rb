@@ -16,7 +16,7 @@ module SendGridActionMailer
 
     attr_accessor :settings, :api_key
 
-    def initialize(**params)
+    def initialize(params = {})
       self.settings = DEFAULTS.merge(params)
     end
 
