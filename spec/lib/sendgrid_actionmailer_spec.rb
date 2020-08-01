@@ -554,6 +554,9 @@ module SendGridActionMailer
           expect(content['filename']).to eq('specs.rb')
           expect(content['type']).to eq('application/x-ruby')
           expect(content['content_id'].class).to eq(String)
+          expect(content['content_id']).to include("@")
+          expect(content['content_id']).not_to include("<")
+          expect(content['content_id']).not_to include(">")
         end
       end
 
