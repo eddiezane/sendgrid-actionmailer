@@ -1,5 +1,13 @@
 # Change Log
 
+## 3.1.0 - 2020-8-03
+
+### Changes
+
+- #81 Fix warnings with ruby 2.7
+- #83 Allow string type mail.to
+- #84 Content-ID values to fix inline attachments
+
 ## 3.0.2 - 2020-4-20
 
 ### Changes
