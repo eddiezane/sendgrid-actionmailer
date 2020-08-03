@@ -16,7 +16,7 @@ module SendGridActionMailer
 
     attr_accessor :settings, :api_key
 
-    def initialize(**params)
+    def initialize(params = {})
       self.settings = DEFAULTS.merge(params)
     end
 
@@ -229,7 +229,7 @@ module SendGridActionMailer
         asm =  asm.delete_if { |key, value| 
           !key.to_s.match(/(group_id)|(groups_to_display)/) }
         if asm.keys.map(&:to_s).include?('group_id')
-          sendgrid_mail.asm = ASM.new(self.class.transform_keys(asm, &:to_sym))
+          sendgrid_mail.asm = ASM.new(**self.class.transform_keys(asm, &:to_sym))
         end
       end
       if mail['ip_pool_name']
@@ -242,19 +242,19 @@ module SendGridActionMailer
         settings = mail['mail_settings'].unparsed_value || {}
         sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
           if settings[:bcc]
-            m.bcc = BccSettings.new(settings[:bcc])
+            m.bcc = BccSettings.new(**settings[:bcc])
           end
           if settings[:bypass_list_management]
-            m.bypass_list_management = BypassListManagement.new(settings[:bypass_list_management])
+            m.bypass_list_management = BypassListManagement.new(**settings[:bypass_list_management])
           end
           if settings[:footer]
-            m.footer = Footer.new(settings[:footer])
+            m.footer = Footer.new(**settings[:footer])
           end
           if settings[:sandbox_mode]
-            m.sandbox_mode = SandBoxMode.new(settings[:sandbox_mode])
+            m.sandbox_mode = SandBoxMode.new(**settings[:sandbox_mode])
           end
           if settings[:spam_check]
-            m.spam_check = SpamCheck.new(settings[:spam_check])
+            m.spam_check = SpamCheck.new(**settings[:spam_check])
           end
         end
       end
@@ -265,16 +265,16 @@ module SendGridActionMailer
         settings = mail['tracking_settings'].unparsed_value
         sendgrid_mail.tracking_settings = TrackingSettings.new.tap do |t|
           if settings[:click_tracking]
-            t.click_tracking = ClickTracking.new(settings[:click_tracking])
+            t.click_tracking = ClickTracking.new(**settings[:click_tracking])
           end
           if settings[:open_tracking]
-            t.open_tracking = OpenTracking.new(settings[:open_tracking])
+            t.open_tracking = OpenTracking.new(**settings[:open_tracking])
           end
           if settings[:subscription_tracking]
-            t.subscription_tracking = SubscriptionTracking.new(settings[:subscription_tracking])
+            t.subscription_tracking = SubscriptionTracking.new(**settings[:subscription_tracking])
           end
           if settings[:ganalytics]
-            t.ganalytics = Ganalytics.new(settings[:ganalytics])
+            t.ganalytics = Ganalytics.new(**settings[:ganalytics])
           end
         end
       end
