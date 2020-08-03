@@ -185,7 +185,7 @@ module SendGridActionMailer
           sendgrid_mail.add_personalization(setup_personalization(mail, p))
         end
       end
-      if (mail.to && mail.to.any?) || (mail.cc && mail.cc.any?) || (mail.bcc && mail.bcc.any?)
+      if (mail.to && !mail.to.empty?) || (mail.cc && !mail.cc.empty?) || (mail.bcc && !mail.bcc.empty?)
         personalization = setup_personalization(mail, {})
         to_emails(mail.to).each { |to| personalization.add_to(to) }
         to_emails(mail.cc).each { |cc| personalization.add_cc(cc) }
