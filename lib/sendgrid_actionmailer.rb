@@ -27,6 +27,10 @@ module SendGridActionMailer
         m.subject = mail.subject || ""
       end
 
+      if self.settings[:mail_settings]
+        sendgrid_mail.mail_settings = self.settings[:mail_settings]
+      end
+
       add_personalizations(sendgrid_mail, mail)
       add_api_key(sendgrid_mail, mail)
       add_content(sendgrid_mail, mail)

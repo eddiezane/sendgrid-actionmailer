@@ -772,6 +772,14 @@ module SendGridActionMailer
             expect(response).to respond_to(:to_json)
           end
         end
+
+        context 'when mail_settings are present' do
+          it 'should apply mail_settings to request body' do
+            m = DeliveryMethod.new(api_key: 'key', return_response: true,  mail_settings: { sandbox_mode: {enable: true }})
+            m.deliver!(mail)
+            expect(client.sent_mail['mail_settings']).to eq({ sandbox_mode: {enable: true }}.to_json)
+          end
+        end
       end
     end
   end

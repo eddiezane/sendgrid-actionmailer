@@ -24,6 +24,18 @@ Normal ActionMailer usage will now transparently be sent using SendGrid's Web AP
 
 ```mail(to: 'example@email.com', subject: 'email subject', body: 'email body')```
 
+### Mail Settings
+
+Mail settings, such as sandbox_mode, may be applied globally through the sendgrid_actionmailer_settings configuration.
+
+```ruby
+config.action_mailer.delivery_method = :sendgrid_actionmailer
+config.action_mailer.sendgrid_actionmailer_settings = {
+  api_key: ENV['SENDGRID_API_KEY'],
+  mail_settings: { sandbox_mode: { enable: true }}
+}
+```
+
 ### Dynamic API Key
 
 If you need to send mail for a number of Sendgrid accounts, you can set the API key for these as follows:
