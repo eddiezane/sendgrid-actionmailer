@@ -238,8 +238,10 @@ module SendGridActionMailer
     end
 
     def add_mail_settings(sendgrid_mail, mail)
-      if mail['mail_settings']
-        settings = mail['mail_settings'].unparsed_value || {}
+      local_settings = mail['mail_settings'] && mail['mail_settings'].unparsed_value || {}
+      global_settings = self.settings[:mail_settings] || {}
+      settings = global_settings.merge(local_settings)
+      unless settings.empty?
         sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
           if settings[:bcc]
             m.bcc = BccSettings.new(**settings[:bcc])

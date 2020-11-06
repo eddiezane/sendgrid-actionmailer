@@ -772,6 +772,45 @@ module SendGridActionMailer
             expect(response).to respond_to(:to_json)
           end
         end
+
+        context 'when mail_settings are present' do
+          it 'should apply mail_settings to request body' do
+            m = DeliveryMethod.new(api_key: 'key', return_response: true,  mail_settings: { sandbox_mode: {enable: true }})
+            m.deliver!(mail)
+            expect(client.sent_mail['mail_settings']).to eq("sandbox_mode" => {"enable" => true })
+          end
+
+          context 'when mail has mail_settings set' do
+            before { mail['mail_settings'] = { spam_check: { enable: true } } }
+
+            it 'should combine local mail_settings with global settings' do
+              m = DeliveryMethod.new(api_key: 'key', return_response: true,  mail_settings: { sandbox_mode: {enable: true }})
+              m.deliver!(mail)
+              expect(client.sent_mail['mail_settings']).to eq(
+                "sandbox_mode" => {"enable" => true },
+                "spam_check" => {"enable" => true },
+              )
+            end
+          end
+
+          context 'when mail contains the same setting as global settings' do
+            before do
+              mail['mail_settings'] = {
+                sandbox_mode: { enable: false },
+                spam_check: { enable: true }
+              }
+            end
+
+            it 'should apply local mail_settings on top of global settings' do
+              m = DeliveryMethod.new(api_key: 'key', return_response: true,  mail_settings: { sandbox_mode: {enable: true }})
+              m.deliver!(mail)
+              expect(client.sent_mail['mail_settings']).to eq(
+                "sandbox_mode" => {"enable" => false },
+                "spam_check" => {"enable" => true },
+              )
+            end
+          end
+        end
       end
     end
   end
