@@ -1,5 +1,9 @@
 # Change Log
 
+## 3.1.1 - 2020-11-06
+- #92 globally configured mail_settings
+- #95 add_mail_settings - support global settings
+
 ## 3.1.0 - 2020-8-03
 
 ### Changes
