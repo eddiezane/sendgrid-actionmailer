@@ -1,5 +1,12 @@
 # Change Log
 
+## 3.2.0 - 2020-02-16
+- #107 Feature/sendgrid api settings, expand settings/options to allow for other SendGrid::Api client settings
+- #106 The SendGrid API simple error handling
+- #105 Github Actions CI
+- #102 Add http_options to configurable in mailer settings
+- #101 Railtie should use ActiveSupport.on_load
+
 ## 3.1.1 - 2020-11-06
 - #92 globally configured mail_settings
 - #95 add_mail_settings - support global settings
