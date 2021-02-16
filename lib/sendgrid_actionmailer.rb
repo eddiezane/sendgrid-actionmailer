@@ -47,7 +47,9 @@ module SendGridActionMailer
     private
 
     def client_options
-      options.dup.select(:api_key, :host, :request_headers, :version, :impersonate_subuser).merge(http_options: settings.fetch(:http_options, {}))
+      options.dup
+      .select { |key, value| key.to_s.match(/(api_key|host|request_headers|version|impersonate_subuser)/) }
+      .merge(http_options: settings.fetch(:http_options, {}))
     end
 
     def client
