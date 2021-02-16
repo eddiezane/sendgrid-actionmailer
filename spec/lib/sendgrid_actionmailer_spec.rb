@@ -40,6 +40,11 @@ module SendGridActionMailer
         expect(m.settings[:api_key]).to eq('ABCDEFG')
       end
 
+      it 'has correct host' do
+        m = DeliveryMethod.new(host: 'example.com')
+        expect(m.settings[:host]).to eq('example.com')
+      end
+
       it 'default raise_delivery_errors' do
         m = DeliveryMethod.new()
         expect(m.settings[:raise_delivery_errors]).to eq(false)

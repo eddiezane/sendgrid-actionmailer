@@ -14,13 +14,14 @@ module SendGridActionMailer
       raise_delivery_errors: false
     }.freeze
 
-    attr_accessor :settings, :api_key
+    attr_accessor :settings, :options
 
     def initialize(params = {})
       self.settings = DEFAULTS.merge(params)
     end
 
     def deliver!(mail)
+      self.options = {}
       sendgrid_mail = Mail.new.tap do |m|
         m.from = to_email(mail.from)
         m.reply_to = to_email(mail.reply_to)
@@ -28,7 +29,7 @@ module SendGridActionMailer
       end
 
       add_personalizations(sendgrid_mail, mail)
-      add_api_key(sendgrid_mail, mail)
+      add_options(sendgrid_mail, mail)
       add_content(sendgrid_mail, mail)
       add_send_options(sendgrid_mail, mail)
       add_mail_settings(sendgrid_mail, mail)
@@ -45,8 +46,14 @@ module SendGridActionMailer
 
     private
 
+    def client_options
+      options.dup
+      .select { |key, value| key.to_s.match(/(api_key|host|request_headers|version|impersonate_subuser)/) }
+      .merge(http_options: settings.fetch(:http_options, {}))
+    end
+
     def client
-      @client = SendGrid::API.new(api_key: api_key, http_options: settings.fetch(:http_options, {})).client
+      @client = SendGrid::API.new(**client_options).client
     end
 
     # type should be either :plain or :html
@@ -146,10 +153,10 @@ module SendGridActionMailer
       content_disp.disposition_type
     end
 
-    def add_api_key(sendgrid_mail, mail)
-      self.api_key = settings.fetch(:api_key)
-      if mail['delivery-method-options'] && mail['delivery-method-options'].value.include?('api_key')
-        self.api_key = mail['delivery-method-options'].unparsed_value['api_key']
+    def add_options(sendgrid_mail, mail)
+      self.options.merge!(**self.class.transform_keys(self.settings, &:to_sym))
+      if !!(mail['delivery-method-options'])
+        self.options.merge!(**self.class.transform_keys(mail['delivery-method-options'].unparsed_value , &:to_sym))
       end
     end
 
