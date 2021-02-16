@@ -64,6 +64,11 @@ module SendGridActionMailer
         m = DeliveryMethod.new(perform_send_request: false)
         expect(m.settings[:perform_send_request]).to eq(false)
       end
+
+      it 'sets http_options' do
+        m = DeliveryMethod.new(http_options: {open_timeout: 40})
+        expect(m.settings[:http_options]).to eq({open_timeout: 40})
+      end
     end
 
     describe '#deliver!' do
@@ -106,11 +111,11 @@ module SendGridActionMailer
         end
 
         it 'sets dynamic api_key, but should revert to default settings api_key' do
-          expect(SendGrid::API).to receive(:new).with(api_key: 'key')
+          expect(SendGrid::API).to receive(:new).with(api_key: 'key', http_options: {})
           mailer.deliver!(default)
-          expect(SendGrid::API).to receive(:new).with(api_key: 'test_key')
+          expect(SendGrid::API).to receive(:new).with(api_key: 'test_key', http_options: {})
           mailer.deliver!(mail)
-          expect(SendGrid::API).to receive(:new).with(api_key: 'key')
+          expect(SendGrid::API).to receive(:new).with(api_key: 'key', http_options: {})
           mailer.deliver!(default)
         end
       end
