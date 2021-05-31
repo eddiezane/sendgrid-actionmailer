@@ -55,7 +55,7 @@ mail(to: 'example@email.com',
 
 The Mail functionality is extended to include additional attributes provided by the Sendgrid API.
 
-[Sendgrid v3 API Documentation](https://sendgrid.com/docs/API_Reference/api_v3.html)
+[Sendgrid v3 API Documentation](https://sendgrid.com/docs/for-developers/sending-email/api-getting-started/)
 
 ### template_id (string)
 The id of a template that you would like to use. If you use a template that contains a subject, you do not need to specify a subject at the personalizations nor message level. However, because of the way ActionMailer works, a body is required, even if the template contains one. If all your emails use templates with a body, you can add `default body: "not used"` to the top of your mailer.
