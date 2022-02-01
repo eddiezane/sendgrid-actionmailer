@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'mail', '~> 2.7'
-  spec.add_dependency 'sendgrid-ruby', '~> 6.4'
+  spec.add_dependency 'sendgrid-ruby', '~> 6.6'
 
   spec.add_development_dependency 'appraisal', '~> 2.1.0'
   spec.add_development_dependency 'bundler'
