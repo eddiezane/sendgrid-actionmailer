@@ -5,7 +5,7 @@ require 'sendgrid-ruby'
 module SendGridActionMailer
   class DeliveryMethod
 
-    # TODO: use custom class to customer excpetion payload
+    # TODO: use custom class to customer exception payload
     SendgridDeliveryError = Class.new(StandardError)
 
     include SendGrid
