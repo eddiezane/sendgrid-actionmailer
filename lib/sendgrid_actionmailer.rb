@@ -233,7 +233,7 @@ module SendGridActionMailer
       end
       if mail['asm']
         asm = mail['asm'].unparsed_value
-        asm =  asm.delete_if { |key, value| 
+        asm = asm.delete_if { |key, value|
           !key.to_s.match(/(group_id)|(groups_to_display)/) }
         if asm.keys.map(&:to_s).include?('group_id')
           sendgrid_mail.asm = ASM.new(**self.class.transform_keys(asm, &:to_sym))
@@ -248,6 +248,8 @@ module SendGridActionMailer
       local_settings = mail['mail_settings'] && mail['mail_settings'].unparsed_value || {}
       global_settings = self.settings[:mail_settings] || {}
       settings = global_settings.merge(local_settings)
+      self.settings.merge!(**self.class.transform_keys(settings, &:to_sym))
+
       unless settings.empty?
         sendgrid_mail.mail_settings = MailSettings.new.tap do |m|
           if settings[:bcc]
